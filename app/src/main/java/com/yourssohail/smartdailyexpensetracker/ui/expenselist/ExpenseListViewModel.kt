@@ -8,7 +8,14 @@ import com.yourssohail.smartdailyexpensetracker.domain.usecase.DeleteExpenseUseC
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetDailyTotalUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpensesByDateRangeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -37,7 +44,7 @@ sealed class ExpenseListEvent {
 class ExpenseListViewModel @Inject constructor(
     private val getExpensesByDateRangeUseCase: GetExpensesByDateRangeUseCase,
     private val getDailyTotalUseCase: GetDailyTotalUseCase,
-    private val deleteExpenseUseCase: DeleteExpenseUseCase // Added for potential delete operations
+    private val deleteExpenseUseCase: DeleteExpenseUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
@@ -55,7 +62,7 @@ class ExpenseListViewModel @Inject constructor(
         _uiState.update { it.copy(selectedDate = newDateMillis, isLoading = true, errorMessage = null) }
         loadExpensesAndTotalForDate(newDateMillis)
     }
-    
+
     fun refreshData() {
         // Re-fetches data for the currently selected date
         loadExpensesAndTotalForDate(uiState.value.selectedDate)
@@ -80,7 +87,6 @@ class ExpenseListViewModel @Inject constructor(
         }.timeInMillis
 
         viewModelScope.launch {
-            // Fetch expenses for the date range
             getExpensesByDateRangeUseCase(dayStart, dayEnd)
                 .onStart { _uiState.update { it.copy(isLoading = true) } }
                 .catch { e ->
@@ -89,24 +95,22 @@ class ExpenseListViewModel @Inject constructor(
                     }
                 }
                 .collect { expenses ->
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { currentState -> // Use currentState
+                        currentState.copy(
                             expenses = expenses,
                             totalExpenseCountForSelectedDate = expenses.size,
-                            groupedExpenses = if (it.groupBy == GroupByOption.CATEGORY) {
-                                groupExpensesByCategory(expenses)
+                            groupedExpenses = if (currentState.groupBy == GroupByOption.CATEGORY) { // Check current groupBy
+                                groupExpensesByCategory(expenses) // Group the newly fetched expenses
                             } else {
                                 emptyMap()
-                            },
-                            // isLoading = false // isLoading will be set to false after total is also fetched
+                            }
+                            // isLoading is handled by the total fetching coroutine
                         )
                     }
                 }
         }
 
         viewModelScope.launch {
-            // Fetch total for the day
-            // Using dayStart for getDailyTotalUseCase as it expects a timestamp within the desired day
             getDailyTotalUseCase(dayStart)
                  .catch { e ->
                     _uiState.update {
@@ -125,18 +129,22 @@ class ExpenseListViewModel @Inject constructor(
         }
     }
 
-    fun onToggleGroupBy() {
-        val currentGroupBy = uiState.value.groupBy
-        val newGroupBy = if (currentGroupBy == GroupByOption.TIME) GroupByOption.CATEGORY else GroupByOption.TIME
-        _uiState.update {
-            it.copy(
-                groupBy = newGroupBy,
-                groupedExpenses = if (newGroupBy == GroupByOption.CATEGORY) {
-                    groupExpensesByCategory(it.expenses)
-                } else {
-                    emptyMap()
-                }
-            )
+    // Replaced onToggleGroupBy with setGroupBy
+    fun setGroupBy(newGroupBy: GroupByOption) {
+        // Only update if the group by option has actually changed
+        if (_uiState.value.groupBy != newGroupBy) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    groupBy = newGroupBy,
+                    groupedExpenses = if (newGroupBy == GroupByOption.CATEGORY) {
+                        // Re-group the currently loaded expenses
+                        groupExpensesByCategory(currentState.expenses)
+                    } else {
+                        // Clear grouped expenses if switching to TIME view
+                        emptyMap()
+                    }
+                )
+            }
         }
     }
 
@@ -145,17 +153,12 @@ class ExpenseListViewModel @Inject constructor(
             try {
                 CategoryType.valueOf(expense.category.uppercase())
             } catch (e: IllegalArgumentException) {
-                // Handle cases where category string might not match an enum constant
-                // This could happen if new categories are added as strings without updating the enum,
-                // or due to data inconsistencies.
-                // For a robust app, you might have an "UNKNOWN" category in your enum
-                // or log this more formally.
                 println("Warning: Unknown category '${expense.category}' for expense ID ${expense.id}. Grouping under FOOD as fallback.")
                 CategoryType.FOOD // Fallback for unknown categories
             }
         }
     }
-    
+
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch {
             try {
