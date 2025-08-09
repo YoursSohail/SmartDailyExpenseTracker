@@ -1,0 +1,261 @@
+package com.yourssohail.smartdailyexpensetracker.ui.expenses
+
+import android.app.DatePickerDialog
+import android.database.Cursor // For getting filename from URI
+import android.net.Uri // For handling image URI
+import android.provider.OpenableColumns // For getting filename from URI
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate // Icon for add receipt
+import androidx.compose.material.icons.filled.Clear // Icon for remove receipt
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpenseEntryScreen(
+    viewModel: ExpenseEntryViewModel = hiltViewModel(),
+    onExpenseSaved: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            var displayName: String? = null
+            context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        displayName = cursor.getString(nameIndex)
+                    }
+                }
+            }
+            viewModel.onReceiptImageSelected(it.toString(), displayName ?: "Selected_Image")
+        }
+    }
+
+    LaunchedEffect(key1 = true) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is ExpenseEntryEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is ExpenseEntryEvent.ExpenseSaved -> {
+                    onExpenseSaved()
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(if (uiState.isEditMode) "Edit Expense" else "Add New Expense")
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+
+            OutlinedTextField(
+                value = uiState.title,
+                onValueChange = viewModel::onTitleChange,
+                label = { Text("Title") },
+                isError = uiState.titleError != null,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (uiState.titleError != null) {
+                Text(uiState.titleError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            OutlinedTextField(
+                value = uiState.amount,
+                onValueChange = viewModel::onAmountChange,
+                label = { Text("Amount (₹)") },
+                isError = uiState.amountError != null,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (uiState.amountError != null) {
+                Text(uiState.amountError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            var categoryExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = categoryExpanded,
+                onExpandedChange = { categoryExpanded = !categoryExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = uiState.selectedCategory?.name ?: "Select Category",
+                    onValueChange = { /* Read only */ },
+                    label = { Text("Category") },
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    isError = uiState.categoryError != null
+                )
+                ExposedDropdownMenu(
+                    expanded = categoryExpanded,
+                    onDismissRequest = { categoryExpanded = false }
+                ) {
+                    viewModel.categories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category.name) },
+                            onClick = {
+                                viewModel.onCategoryChange(category)
+                                categoryExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+             if (uiState.categoryError != null) {
+                Text(uiState.categoryError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = uiState.date
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _, selectedYear, selectedMonth, selectedDayOfMonth ->
+                    val newCal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, selectedDayOfMonth) }
+                    viewModel.onDateChange(newCal.timeInMillis)
+                }, year, month, day
+            )
+
+            OutlinedTextField(
+                value = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(uiState.date),
+                onValueChange = {},
+                label = { Text("Date") },
+                readOnly = true,
+                trailingIcon = { Icon(Icons.Default.DateRange, "Select Date", Modifier.clickable { datePickerDialog.show() }) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = uiState.notes,
+                onValueChange = viewModel::onNotesChange,
+                label = { Text("Optional Notes (max 100)") },
+                isError = uiState.notesError != null,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp),
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                maxLines = 3
+            )
+             if (uiState.notesError != null) {
+                Text(uiState.notesError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
+                Text("Receipt Image (Optional)", style = MaterialTheme.typography.labelLarge)
+                Spacer(Modifier.height(8.dp))
+                if (uiState.selectedReceiptUri == null) {
+                    OutlinedButton(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Filled.AddPhotoAlternate, contentDescription = "Add Receipt Icon", modifier = Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text("Add Receipt Image")
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = uiState.receiptFileName ?: "Selected Image", // Display filename if available
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = viewModel::onRemoveReceiptImage) {
+                            Icon(Icons.Filled.Clear, contentDescription = "Remove Receipt Image")
+                        }
+                    }
+                }
+                if (uiState.receiptImageError != null) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(uiState.receiptImageError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+
+
+            if (uiState.isDuplicateWarningVisible) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Possible Duplicate!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                        Text(
+                            "An expense with similar details already exists. Are you sure you want to save this one?",
+                             style = MaterialTheme.typography.bodyMedium,
+                             color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
+                            // "Cancel" in duplicate dialog should probably just dismiss the dialog, not trigger onTitleChange
+                            OutlinedButton(onClick = { viewModel.onTitleChange(uiState.title) }) { // Or a dedicated dismiss method in VM
+                                Text("Cancel")
+                            }
+                            Button(onClick = viewModel::forceSaveExpense) {
+                                Text("Save Anyway")
+                            }
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = viewModel::saveExpense,
+                enabled = !uiState.isLoading && !uiState.isDuplicateWarningVisible,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                } else {
+                    Text(if (uiState.isEditMode) "Update Expense" else "Save Expense")
+                }
+            }
+        }
+    }
+}
