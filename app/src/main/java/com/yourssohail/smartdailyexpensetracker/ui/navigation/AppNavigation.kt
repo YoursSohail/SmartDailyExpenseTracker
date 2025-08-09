@@ -3,6 +3,7 @@ package com.yourssohail.smartdailyexpensetracker.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -57,7 +58,9 @@ fun AppNavigation() {
             val showBottomBar = currentRoute in screensWithBottomBar
 
             if (showBottomBar) {
-                NavigationBar{
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ){
                     val currentDestination = navBackStackEntry?.destination
                     bottomNavItems.forEach { screen ->
                         NavigationBarItem(

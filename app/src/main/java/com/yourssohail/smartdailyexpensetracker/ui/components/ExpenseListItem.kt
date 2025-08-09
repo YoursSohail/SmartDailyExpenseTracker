@@ -63,7 +63,7 @@ fun ExpenseListItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
