@@ -21,7 +21,6 @@ interface ExpenseRepository {
 
     fun getTotalSpentOnDate(dateStart: Long, dateEnd: Long): Flow<Double?>
 
-    fun detectDuplicate(title: String, amount: Double, date: Long): Flow<Expense?>
+    fun detectDuplicate(title: String, amount: Double, dateStart: Long, dateEnd: Long): Flow<Expense?> // Changed
 
-    // TODO: Add methods for mock offline-first sync if needed later
 }

@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
-import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository // Added
+import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.AddExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.DetectDuplicateExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpenseByIdUseCase
@@ -22,17 +22,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest // Added
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.text.NumberFormat // Added
+import java.text.NumberFormat
 import java.util.Calendar
-import java.util.Locale // Added
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -59,7 +58,7 @@ data class ExpenseEntryUiState(
     val currentExpenseId: Long? = null,
     val isEditMode: Boolean = false,
     val isSaveEnabled: Boolean = false,
-    val totalSpentToday: String = "₹0.00" // Added
+    val totalSpentToday: String = "₹0.00"
 )
 
 sealed class ExpenseEntryEvent {
@@ -74,7 +73,7 @@ class ExpenseEntryViewModel @Inject constructor(
     private val validateExpenseUseCase: ValidateExpenseUseCase,
     private val detectDuplicateExpenseUseCase: DetectDuplicateExpenseUseCase,
     private val getExpenseByIdUseCase: GetExpenseByIdUseCase,
-    private val expenseRepository: ExpenseRepository, // Added
+    private val expenseRepository: ExpenseRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -124,14 +123,12 @@ class ExpenseEntryViewModel @Inject constructor(
     private fun observeTotalSpentToday() {
         viewModelScope.launch {
             val calendar = Calendar.getInstance()
-            // Start of today
             calendar.set(Calendar.HOUR_OF_DAY, 0)
             calendar.set(Calendar.MINUTE, 0)
             calendar.set(Calendar.SECOND, 0)
             calendar.set(Calendar.MILLISECOND, 0)
             val startOfDayMillis = calendar.timeInMillis
 
-            // End of today
             calendar.set(Calendar.HOUR_OF_DAY, 23)
             calendar.set(Calendar.MINUTE, 59)
             calendar.set(Calendar.SECOND, 59)
@@ -146,13 +143,11 @@ class ExpenseEntryViewModel @Inject constructor(
         }
     }
 
-
     private fun updateSaveButtonStatus() {
         val state = _uiState.value
         val isTitleValid = state.title.isNotBlank() && state.titleError == null
         val isAmountValid = state.amount.toDoubleOrNull()?.let { it > 0.0 } ?: false && state.amountError == null
         val isCategoryValid = state.selectedCategory != null && state.categoryError == null
-
         _uiState.update {
             it.copy(isSaveEnabled = isTitleValid && isAmountValid && isCategoryValid)
         }
@@ -314,6 +309,11 @@ class ExpenseEntryViewModel @Inject constructor(
     
     fun forceSaveExpense() {
         saveExpense(forceSave = true)
+    }
+
+    fun dismissDuplicateWarning() {
+        _uiState.update { it.copy(isDuplicateWarningVisible = false) }
+        updateSaveButtonStatus() // Re-check if the main save button can be enabled
     }
 
     fun resetFields() {

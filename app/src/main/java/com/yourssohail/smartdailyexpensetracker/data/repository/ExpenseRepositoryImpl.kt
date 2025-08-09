@@ -42,8 +42,8 @@ class ExpenseRepositoryImpl @Inject constructor(
         return expenseDao.getTotalSpentOnDate(dateStart, dateEnd)
     }
 
-    override fun detectDuplicate(title: String, amount: Double, date: Long): Flow<Expense?> {
-        return expenseDao.detectDuplicate(title, amount, date)
+    override fun detectDuplicate(title: String, amount: Double, dateStart: Long, dateEnd: Long): Flow<Expense?> { // Changed
+        return expenseDao.detectDuplicate(title, amount, dateStart, dateEnd) // Changed
     }
 
     // Mock logic for offline-first sync (as per requirements.md and tasks.md)

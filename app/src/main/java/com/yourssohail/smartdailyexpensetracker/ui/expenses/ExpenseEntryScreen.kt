@@ -59,7 +59,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign // Added
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -330,7 +330,7 @@ fun ExpenseEntryScreen(
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
-                            OutlinedButton(onClick = { viewModel.onTitleChange(uiState.title) }) { 
+                            OutlinedButton(onClick = viewModel::dismissDuplicateWarning) { // Changed here
                                 Text("Cancel")
                             }
                             Button(onClick = viewModel::forceSaveExpense) {
@@ -343,7 +343,7 @@ fun ExpenseEntryScreen(
 
             Button(
                 onClick = viewModel::saveExpense,
-                enabled = uiState.isSaveEnabled && !uiState.isLoading && !uiState.isDuplicateWarningVisible, // Corrected
+                enabled = uiState.isSaveEnabled && !uiState.isLoading && !uiState.isDuplicateWarningVisible,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (uiState.isLoading) {

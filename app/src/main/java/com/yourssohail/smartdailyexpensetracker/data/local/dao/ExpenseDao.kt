@@ -37,11 +37,8 @@ interface ExpenseDao {
     @Query("SELECT SUM(amount) FROM expenses WHERE date BETWEEN :dateStart AND :dateEnd")
     fun getTotalSpentOnDate(dateStart: Long, dateEnd: Long): Flow<Double?>
 
-    // For duplicate detection, we might want to check for a specific time window around the date
-    // For now, this checks for the exact title, amount, and date (timestamp)
-    // Consider if 'date' here means a whole day or an exact millisecond for duplication.
-    // If it's for a whole day, the query would be more complex (e.g. date >= startOfDay AND date < endOfDay)
-    @Query("SELECT * FROM expenses WHERE title = :title AND amount = :amount AND date = :date LIMIT 1")
-    fun detectDuplicate(title: String, amount: Double, date: Long): Flow<Expense?>
+    // For duplicate detection, checks for the exact title and amount within the given date range (start and end of day)
+    @Query("SELECT * FROM expenses WHERE title = :title AND amount = :amount AND date BETWEEN :dateStart AND :dateEnd LIMIT 1")
+    fun detectDuplicate(title: String, amount: Double, dateStart: Long, dateEnd: Long): Flow<Expense?>
 
 }
