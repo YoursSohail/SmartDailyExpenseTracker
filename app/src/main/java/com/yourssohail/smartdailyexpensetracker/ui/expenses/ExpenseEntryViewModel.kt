@@ -7,9 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository // Added
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.AddExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.DetectDuplicateExpenseUseCase
-import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpenseByIdUseCase // Import the use case
+import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpenseByIdUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.ValidateExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.ValidationResult
 import com.yourssohail.smartdailyexpensetracker.ui.navigation.AppDestinations
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest // Added
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,7 +30,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.text.NumberFormat // Added
 import java.util.Calendar
+import java.util.Locale // Added
 import java.util.UUID
 import javax.inject.Inject
 
@@ -47,15 +51,15 @@ data class ExpenseEntryUiState(
     val isLoading: Boolean = false,
     val isDuplicateWarningVisible: Boolean = false,
 
-    // Receipt related fields
-    val selectedReceiptUri: String? = null, // Can be content URI or file path in edit mode
+    val selectedReceiptUri: String? = null,
     val receiptFileName: String? = null,
     val receiptImageError: String? = null,
-    val existingReceiptPath: String? = null, // To store original path in edit mode if a new image isn't picked
+    val existingReceiptPath: String? = null,
 
-    // Edit mode fields
     val currentExpenseId: Long? = null,
-    val isEditMode: Boolean = false
+    val isEditMode: Boolean = false,
+    val isSaveEnabled: Boolean = false,
+    val totalSpentToday: String = "₹0.00" // Added
 )
 
 sealed class ExpenseEntryEvent {
@@ -69,7 +73,8 @@ class ExpenseEntryViewModel @Inject constructor(
     private val addExpenseUseCase: AddExpenseUseCase,
     private val validateExpenseUseCase: ValidateExpenseUseCase,
     private val detectDuplicateExpenseUseCase: DetectDuplicateExpenseUseCase,
-    private val getExpenseByIdUseCase: GetExpenseByIdUseCase, // Inject the use case
+    private val getExpenseByIdUseCase: GetExpenseByIdUseCase,
+    private val expenseRepository: ExpenseRepository, // Added
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -81,12 +86,14 @@ class ExpenseEntryViewModel @Inject constructor(
 
     val categories: List<CategoryType> = CategoryType.values().toList()
 
+    private val indianCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+
     init {
         val expenseId = savedStateHandle.get<Long>(AppDestinations.EXPENSE_ID_ARG)
         if (expenseId != null && expenseId != -1L) {
             _uiState.update { it.copy(isLoading = true, isEditMode = true, currentExpenseId = expenseId) }
             viewModelScope.launch {
-                val expense = getExpenseByIdUseCase(expenseId).firstOrNull() // Use the injected use case
+                val expense = getExpenseByIdUseCase(expenseId).firstOrNull()
                 if (expense != null) {
                     _uiState.update {
                         it.copy(
@@ -101,27 +108,73 @@ class ExpenseEntryViewModel @Inject constructor(
                             existingReceiptPath = expense.receiptImagePath
                         )
                     }
+                    updateSaveButtonStatus()
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                     _eventFlow.emit(ExpenseEntryEvent.ShowToast("Error: Could not load expense to edit."))
+                    updateSaveButtonStatus()
                 }
             }
+        } else {
+            updateSaveButtonStatus()
+        }
+        observeTotalSpentToday()
+    }
+
+    private fun observeTotalSpentToday() {
+        viewModelScope.launch {
+            val calendar = Calendar.getInstance()
+            // Start of today
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startOfDayMillis = calendar.timeInMillis
+
+            // End of today
+            calendar.set(Calendar.HOUR_OF_DAY, 23)
+            calendar.set(Calendar.MINUTE, 59)
+            calendar.set(Calendar.SECOND, 59)
+            calendar.set(Calendar.MILLISECOND, 999)
+            val endOfDayMillis = calendar.timeInMillis
+
+            expenseRepository.getTotalSpentOnDate(startOfDayMillis, endOfDayMillis)
+                .collectLatest { total ->
+                    val formattedTotal = indianCurrencyFormat.format(total ?: 0.0)
+                    _uiState.update { it.copy(totalSpentToday = formattedTotal) }
+                }
         }
     }
 
 
+    private fun updateSaveButtonStatus() {
+        val state = _uiState.value
+        val isTitleValid = state.title.isNotBlank() && state.titleError == null
+        val isAmountValid = state.amount.toDoubleOrNull()?.let { it > 0.0 } ?: false && state.amountError == null
+        val isCategoryValid = state.selectedCategory != null && state.categoryError == null
+
+        _uiState.update {
+            it.copy(isSaveEnabled = isTitleValid && isAmountValid && isCategoryValid)
+        }
+    }
+
     fun onTitleChange(newTitle: String) {
         _uiState.update { it.copy(title = newTitle, titleError = null, isDuplicateWarningVisible = false) }
+        updateSaveButtonStatus()
     }
 
     fun onAmountChange(newAmount: String) {
         if (newAmount.matches(Regex("^\\d*\\.?\\d*$"))) {
             _uiState.update { it.copy(amount = newAmount, amountError = null, isDuplicateWarningVisible = false) }
+        } else if (newAmount.isEmpty()){
+             _uiState.update { it.copy(amount = "", amountError = null, isDuplicateWarningVisible = false) }
         }
+        updateSaveButtonStatus()
     }
 
     fun onCategoryChange(category: CategoryType) {
         _uiState.update { it.copy(selectedCategory = category, categoryError = null) }
+        updateSaveButtonStatus()
     }
 
     fun onNotesChange(newNotes: String) {
@@ -139,7 +192,6 @@ class ExpenseEntryViewModel @Inject constructor(
     fun onRemoveReceiptImage() {
         _uiState.update { it.copy(selectedReceiptUri = null, receiptFileName = null, receiptImageError = null) }
     }
-
 
     private fun validateInputs(): Boolean {
         val titleResult = validateExpenseUseCase.validateTitle(uiState.value.title)
@@ -161,6 +213,7 @@ class ExpenseEntryViewModel @Inject constructor(
                 receiptImageError = null
             )
         }
+        updateSaveButtonStatus()
         return newTitleError == null && newAmountError == null && newCategoryError == null && newNotesError == null
     }
 
@@ -206,11 +259,10 @@ class ExpenseEntryViewModel @Inject constructor(
                     finalReceiptImagePath = saveReceiptImageToInternalStorage(currentState.selectedReceiptUri)
                     if (finalReceiptImagePath == null) {
                         _uiState.update { it.copy(isLoading = false) }
+                        updateSaveButtonStatus()
                         return@launch
                     }
-                    // TODO: Optionally delete the old image file
                 } else {
-                    // TODO: Optionally delete the old image file
                     finalReceiptImagePath = null
                 }
             }
@@ -251,10 +303,11 @@ class ExpenseEntryViewModel @Inject constructor(
                 _eventFlow.emit(ExpenseEntryEvent.ShowToast(message))
                 _eventFlow.emit(ExpenseEntryEvent.ExpenseSaved)
                 _uiState.update { it.copy(isLoading = false) }
-                if (!currentState.isEditMode) resetFields()
+                if (!currentState.isEditMode) resetFields() else updateSaveButtonStatus()
             } catch (e: Exception) {
                 _eventFlow.emit(ExpenseEntryEvent.ShowToast("Error: ${e.message ?: "Failed to save/update"}"))
                 _uiState.update { it.copy(isLoading = false) }
+                updateSaveButtonStatus()
             }
         }
     }
@@ -265,5 +318,6 @@ class ExpenseEntryViewModel @Inject constructor(
 
     fun resetFields() {
         _uiState.value = ExpenseEntryUiState(date = System.currentTimeMillis())
+        updateSaveButtonStatus()
     }
 }

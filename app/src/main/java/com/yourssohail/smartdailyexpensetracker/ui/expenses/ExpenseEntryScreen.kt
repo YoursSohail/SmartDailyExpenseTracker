@@ -1,30 +1,70 @@
 package com.yourssohail.smartdailyexpensetracker.ui.expenses
 
 import android.app.DatePickerDialog
-import android.database.Cursor // For getting filename from URI
-import android.net.Uri // For handling image URI
-import android.provider.OpenableColumns // For getting filename from URI
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddPhotoAlternate // Icon for add receipt
-import androidx.compose.material.icons.filled.Clear // Icon for remove receipt
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign // Added
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import java.io.File
+import java.io.FileInputStream
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -38,7 +78,6 @@ fun ExpenseEntryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -74,6 +113,14 @@ fun ExpenseEntryScreen(
             TopAppBar(
                 title = {
                     Text(if (uiState.isEditMode) "Edit Expense" else "Add New Expense")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onExpenseSaved) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close"
+                        )
+                    }
                 }
             )
         }
@@ -86,6 +133,15 @@ fun ExpenseEntryScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Display Total Spent Today
+            Text(
+                text = "Total Spent Today: ${uiState.totalSpentToday}",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                textAlign = TextAlign.Center
+            )
 
             OutlinedTextField(
                 value = uiState.title,
@@ -145,7 +201,7 @@ fun ExpenseEntryScreen(
                     }
                 }
             }
-             if (uiState.categoryError != null) {
+            if (uiState.categoryError != null) {
                 Text(uiState.categoryError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
@@ -181,13 +237,15 @@ fun ExpenseEntryScreen(
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 maxLines = 3
             )
-             if (uiState.notesError != null) {
+            if (uiState.notesError != null) {
                 Text(uiState.notesError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
+            // --- Receipt Image Section ---
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
                 Text("Receipt Image (Optional)", style = MaterialTheme.typography.labelLarge)
                 Spacer(Modifier.height(8.dp))
+
                 if (uiState.selectedReceiptUri == null) {
                     OutlinedButton(
                         onClick = { imagePickerLauncher.launch("image/*") },
@@ -201,24 +259,63 @@ fun ExpenseEntryScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        val imageBitmap = remember(uiState.selectedReceiptUri) {
+                            uiState.selectedReceiptUri?.let { uriString ->
+                                try {
+                                    val uri = Uri.parse(uriString)
+                                    if (uriString.startsWith("content://")) {
+                                        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                                            BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+                                        }
+                                    } else { // Assumed to be a file path
+                                        val file = File(uriString)
+                                        if (file.exists()) {
+                                            FileInputStream(file).use { inputStream ->
+                                                BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+                                            }
+                                        } else null
+                                    }
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                    null // Handle error by returning null
+                                }
+                            }
+                        }
+                        imageBitmap?.let {
+                            Image(
+                                bitmap = it,
+                                contentDescription = "Receipt Preview",
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
                         Text(
-                            text = uiState.receiptFileName ?: "Selected Image", // Display filename if available
+                            text = uiState.receiptFileName ?: "Selected Image",
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+
                         IconButton(onClick = viewModel::onRemoveReceiptImage) {
                             Icon(Icons.Filled.Clear, contentDescription = "Remove Receipt Image")
                         }
                     }
                 }
+
                 if (uiState.receiptImageError != null) {
                     Spacer(Modifier.height(4.dp))
                     Text(uiState.receiptImageError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
-
+            // --- End of Receipt Image Section ---
 
             if (uiState.isDuplicateWarningVisible) {
                 Card(
@@ -229,12 +326,11 @@ fun ExpenseEntryScreen(
                         Text("Possible Duplicate!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onTertiaryContainer)
                         Text(
                             "An expense with similar details already exists. Are you sure you want to save this one?",
-                             style = MaterialTheme.typography.bodyMedium,
-                             color = MaterialTheme.colorScheme.onTertiaryContainer
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
-                            // "Cancel" in duplicate dialog should probably just dismiss the dialog, not trigger onTitleChange
-                            OutlinedButton(onClick = { viewModel.onTitleChange(uiState.title) }) { // Or a dedicated dismiss method in VM
+                            OutlinedButton(onClick = { viewModel.onTitleChange(uiState.title) }) { 
                                 Text("Cancel")
                             }
                             Button(onClick = viewModel::forceSaveExpense) {
@@ -247,7 +343,7 @@ fun ExpenseEntryScreen(
 
             Button(
                 onClick = viewModel::saveExpense,
-                enabled = !uiState.isLoading && !uiState.isDuplicateWarningVisible,
+                enabled = uiState.isSaveEnabled && !uiState.isLoading && !uiState.isDuplicateWarningVisible, // Corrected
                 modifier = Modifier.fillMaxWidth()
             ) {
                 if (uiState.isLoading) {
