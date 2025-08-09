@@ -18,22 +18,31 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.EnumMap
 import javax.inject.Inject
 
 enum class GroupByOption {
-    TIME,
+    TIME, // Will now mean group by TimeOfDay (Morning, Afternoon, Evening)
     CATEGORY
+}
+
+enum class TimeOfDay {
+    MORNING,
+    AFTERNOON,
+    EVENING
 }
 
 data class ExpenseListUiState(
     val expenses: List<Expense> = emptyList(),
-    val selectedDate: Long = System.currentTimeMillis(), // Default to today
+    val selectedDate: Long = System.currentTimeMillis(),
     val totalSpentForSelectedDate: Double? = null,
     val totalExpenseCountForSelectedDate: Int = 0,
     val isLoading: Boolean = true,
     val groupBy: GroupByOption = GroupByOption.TIME,
     val errorMessage: String? = null,
-    val groupedExpenses: Map<CategoryType, List<Expense>> = emptyMap()
+    val groupedExpenses: Map<CategoryType, List<Expense>> = emptyMap(),
+    // Changed from hourlyGroupedExpenses to timeOfDayGroupedExpenses
+    val timeOfDayGroupedExpenses: Map<TimeOfDay, List<Expense>> = emptyMap()
 )
 
 sealed class ExpenseListEvent {
@@ -54,36 +63,58 @@ class ExpenseListViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
-        // Load expenses for the current day initially
         onDateSelected(System.currentTimeMillis())
     }
 
     fun onDateSelected(newDateMillis: Long) {
-        _uiState.update { it.copy(selectedDate = newDateMillis, isLoading = true, errorMessage = null) }
+        _uiState.update {
+            it.copy(
+                selectedDate = newDateMillis,
+                isLoading = true,
+                errorMessage = null
+            )
+        }
         loadExpensesAndTotalForDate(newDateMillis)
     }
 
     fun refreshData() {
-        // Re-fetches data for the currently selected date
         loadExpensesAndTotalForDate(uiState.value.selectedDate)
     }
+
+    private fun getTimeOfDay(timestamp: Long): TimeOfDay {
+        val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
+        return when (calendar.get(Calendar.HOUR_OF_DAY)) {
+            in 0..11 -> TimeOfDay.MORNING // 12 AM - 11:59 AM
+            in 12..16 -> TimeOfDay.AFTERNOON // 12 PM - 4:59 PM
+            else -> TimeOfDay.EVENING // 5 PM - 11:59 PM
+        }
+    }
+
+    private fun groupExpensesByTimeOfDay(expenses: List<Expense>): Map<TimeOfDay, List<Expense>> {
+        val groupedMap = EnumMap<TimeOfDay, MutableList<Expense>>(TimeOfDay::class.java)
+        // Ensure all TimeOfDay keys exist for ordered display, even if empty
+        TimeOfDay.values().forEach { tod -> groupedMap[tod] = mutableListOf() }
+
+        expenses.forEach { expense ->
+            val timeOfDay = getTimeOfDay(expense.date)
+            groupedMap[timeOfDay]?.add(expense)
+        }
+        // Filter out empty groups only if you don't want to show empty sections,
+        // but for consistent UI, it's often better to show the section header.
+        // For this implementation, we will keep all sections.
+        return groupedMap.mapValues { it.value.toList() } // Make lists immutable
+    }
+
 
     private fun loadExpensesAndTotalForDate(dateMillis: Long) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         val calendar = Calendar.getInstance().apply { timeInMillis = dateMillis }
         val dayStart = calendar.apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-
         val dayEnd = calendar.apply {
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-            set(Calendar.MILLISECOND, 999)
+            set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
         }.timeInMillis
 
         viewModelScope.launch {
@@ -95,16 +126,22 @@ class ExpenseListViewModel @Inject constructor(
                     }
                 }
                 .collect { expenses ->
-                    _uiState.update { currentState -> // Use currentState
+                    _uiState.update { currentState ->
+                        val newTimeOfDayGroupedExpenses = if (currentState.groupBy == GroupByOption.TIME) {
+                            groupExpensesByTimeOfDay(expenses)
+                        } else {
+                            emptyMap()
+                        }
+                        val newCategoryGroupedExpenses = if (currentState.groupBy == GroupByOption.CATEGORY) {
+                            groupExpensesByCategory(expenses)
+                        } else {
+                            emptyMap()
+                        }
                         currentState.copy(
                             expenses = expenses,
                             totalExpenseCountForSelectedDate = expenses.size,
-                            groupedExpenses = if (currentState.groupBy == GroupByOption.CATEGORY) { // Check current groupBy
-                                groupExpensesByCategory(expenses) // Group the newly fetched expenses
-                            } else {
-                                emptyMap()
-                            }
-                            // isLoading is handled by the total fetching coroutine
+                            timeOfDayGroupedExpenses = newTimeOfDayGroupedExpenses,
+                            groupedExpenses = newCategoryGroupedExpenses
                         )
                     }
                 }
@@ -112,9 +149,10 @@ class ExpenseListViewModel @Inject constructor(
 
         viewModelScope.launch {
             getDailyTotalUseCase(dayStart)
-                 .catch { e ->
+                .catch { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, // Set loading false even if total fails
+                        it.copy(
+                            isLoading = false,
                             errorMessage = (uiState.value.errorMessage ?: "") + "\nError fetching total: ${e.message}")
                     }
                 }
@@ -122,27 +160,30 @@ class ExpenseListViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             totalSpentForSelectedDate = total,
-                            isLoading = false // Set loading false after both calls attempt/complete
+                            isLoading = false
                         )
                     }
                 }
         }
     }
 
-    // Replaced onToggleGroupBy with setGroupBy
     fun setGroupBy(newGroupBy: GroupByOption) {
-        // Only update if the group by option has actually changed
         if (_uiState.value.groupBy != newGroupBy) {
             _uiState.update { currentState ->
+                val newTimeOfDayGroupedExpenses = if (newGroupBy == GroupByOption.TIME) {
+                    groupExpensesByTimeOfDay(currentState.expenses)
+                } else {
+                    emptyMap()
+                }
+                val newCategoryGroupedExpenses = if (newGroupBy == GroupByOption.CATEGORY) {
+                    groupExpensesByCategory(currentState.expenses)
+                } else {
+                    emptyMap()
+                }
                 currentState.copy(
                     groupBy = newGroupBy,
-                    groupedExpenses = if (newGroupBy == GroupByOption.CATEGORY) {
-                        // Re-group the currently loaded expenses
-                        groupExpensesByCategory(currentState.expenses)
-                    } else {
-                        // Clear grouped expenses if switching to TIME view
-                        emptyMap()
-                    }
+                    timeOfDayGroupedExpenses = newTimeOfDayGroupedExpenses,
+                    groupedExpenses = newCategoryGroupedExpenses
                 )
             }
         }
@@ -153,10 +194,11 @@ class ExpenseListViewModel @Inject constructor(
             try {
                 CategoryType.valueOf(expense.category.uppercase())
             } catch (e: IllegalArgumentException) {
+                // Consider logging this or handling it more robustly if unknown categories are common
                 println("Warning: Unknown category '${expense.category}' for expense ID ${expense.id}. Grouping under FOOD as fallback.")
-                CategoryType.FOOD // Fallback for unknown categories
+                CategoryType.FOOD // Fallback or a specific 'UNKNOWN' category
             }
-        }
+        }.toSortedMap(compareBy { it.name })
     }
 
     fun deleteExpense(expense: Expense) {
@@ -164,7 +206,7 @@ class ExpenseListViewModel @Inject constructor(
             try {
                 deleteExpenseUseCase(expense)
                 _eventFlow.emit(ExpenseListEvent.ShowToast("Expense deleted successfully"))
-                refreshData() // Refresh the list after deletion
+                refreshData()
             } catch (e: Exception) {
                 _eventFlow.emit(ExpenseListEvent.ShowToast("Failed to delete expense: ${e.message}"))
             }

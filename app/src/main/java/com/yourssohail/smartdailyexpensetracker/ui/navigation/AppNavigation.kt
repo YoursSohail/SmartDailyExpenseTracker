@@ -9,7 +9,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember // Added remember
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -57,7 +57,7 @@ fun AppNavigation() {
             val showBottomBar = currentRoute in screensWithBottomBar
 
             if (showBottomBar) {
-                NavigationBar {
+                NavigationBar{
                     val currentDestination = navBackStackEntry?.destination
                     bottomNavItems.forEach { screen ->
                         NavigationBarItem(

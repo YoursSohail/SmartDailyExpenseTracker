@@ -79,7 +79,7 @@ fun ExpenseReportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Expense Report (Last 7 Days)") },
+                title = { Text("Expense Report") },
                 actions = {
                     IconButton(onClick = viewModel::onShareReportClicked) {
                         Icon(Icons.Default.Share, contentDescription = "Share Report")
@@ -121,7 +121,7 @@ fun ExpenseReportScreen(
                                 values = listOf(
                                     Bars.Data(
                                         label = "Expense",
-                                        value = dailyTotal.totalAmount.toDouble(),
+                                        value = dailyTotal.totalAmount,
                                         color = Brush.verticalGradient(
                                             colors = listOf(primaryColor, primaryColorWithAlpha)
                                         )
@@ -150,7 +150,7 @@ fun ExpenseReportScreen(
                                     .weight(1f),
                                 data = chartData,
                                 barProperties = BarProperties(
-                                    // cornerRadius = // consider adding if you like rounded bars
+                                    cornerRadius = Bars.Data.Radius.Circular(4.dp),
                                 ),
                                 animationSpec = spring(
                                     dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -172,7 +172,7 @@ fun ExpenseReportScreen(
                             Text(daily.formattedDate, style = MaterialTheme.typography.bodyLarge)
                             Text("₹${String.format("%.2f", daily.totalAmount)}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                         }
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
 
@@ -194,7 +194,7 @@ fun ExpenseReportScreen(
                             modifier = Modifier.fillMaxWidth().height(6.dp)
                         )
                         Spacer(Modifier.height(4.dp))
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
 
@@ -266,17 +266,6 @@ fun ReportSectionCard(
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             content()
-        }
-    }
-}
-
-@Composable
-fun PlaceholderChart() {
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-             CircularProgressIndicator()
-             Spacer(modifier = Modifier.height(8.dp))
-             Text("Loading chart data...")
         }
     }
 }
