@@ -1,6 +1,7 @@
 package com.yourssohail.smartdailyexpensetracker.ui.report
 
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Environment
@@ -19,13 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.ehsannarmani.compose_charts.ColumnChart
+import ir.ehsannarmani.compose_charts.LineChart
 import ir.ehsannarmani.compose_charts.models.BarProperties
 import ir.ehsannarmani.compose_charts.models.Bars
+import ir.ehsannarmani.compose_charts.models.LabelProperties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -149,6 +153,13 @@ fun ExpenseReportScreen(
                                     .fillMaxWidth()
                                     .weight(1f),
                                 data = chartData,
+                                labelProperties = LabelProperties(
+                                    enabled = true,
+                                    textStyle = TextStyle(
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 12.sp
+                                    )
+                                ),
                                 barProperties = BarProperties(
                                     cornerRadius = Bars.Data.Radius.Circular(4.dp),
                                 ),
@@ -217,7 +228,7 @@ fun ExpenseReportScreen(
 }
 
 // Helper function to save CSV file using MediaStore
-private suspend fun saveCsvFile(context: android.content.Context, fileName: String, csvContent: String): Boolean {
+private suspend fun saveCsvFile(context: Context, fileName: String, csvContent: String): Boolean {
     return withContext(Dispatchers.IO) { // Perform file operations on IO dispatcher
         try {
             val contentValues = ContentValues().apply {

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState // Added import
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
@@ -119,23 +120,37 @@ internal fun AnimatedExpenseListItem(
     index: Int,
     onDeleteClick: (Expense) -> Unit,
     onEditClick: (Long) -> Unit,
+    isScrolling: Boolean, // Current scroll state from LazyListState
     modifier: Modifier = Modifier
 ) {
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(key1 = expense.id, key2 = index) {
-        kotlinx.coroutines.delay(index * 70L)
-        isVisible = true
+    // This state tracks if we intend for the item to be visible.
+    var targetVisible by remember(expense.id) { mutableStateOf(false) }
+
+    // This LaunchedEffect runs when the item is first composed, or if 'isScrolling' changes
+    // for an item that isn't yet visible. Its goal is to set 'targetVisible = true'.
+    // The delay before setting it true depends on the scroll state.
+    LaunchedEffect(key1 = expense.id, key2 = isScrolling) {
+        if (!targetVisible) { // Only proceed if not already targeted for visibility
+            val delayMillis = if (isScrolling) 0L else index * 70L // No delay if scrolling
+            if (delayMillis > 0L) { // Only actually delay if needed
+                kotlinx.coroutines.delay(delayMillis)
+            }
+            // After any potential delay, mark as ready to be visible.
+            // If isScrolling changed during the delay, this effect would have been
+            // cancelled and restarted with the new 'isScrolling' value.
+            targetVisible = true
+        }
     }
 
     AnimatedVisibility(
-        visible = isVisible,
+        visible = targetVisible, // Becomes true after the (conditional) delay
         enter = slideInHorizontally(
             initialOffsetX = { fullWidth -> fullWidth / 2 },
-            animationSpec = tween(durationMillis = 350)
+            animationSpec = tween(durationMillis = if (isScrolling) 0 else 350) // Animation duration based on current scroll state
         ),
         exit = slideOutHorizontally(
             targetOffsetX = { fullWidth -> fullWidth },
-            animationSpec = tween(durationMillis = 300)
+            animationSpec = tween(durationMillis = 300) // Standard exit animation
         ),
         modifier = modifier
     ) {
@@ -155,6 +170,8 @@ internal fun ListContent(
     onDeleteExpense: (Expense) -> Unit,
     onNavigateToExpenseEdit: (expenseId: Long) -> Unit
 ) {
+    val listState = rememberLazyListState() // Added LazyListState
+
     when {
         uiState.isLoading -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -177,6 +194,7 @@ internal fun ListContent(
         }
         else -> {
             LazyColumn(
+                state = listState, // Passed state to LazyColumn
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
             ) {
@@ -190,7 +208,7 @@ internal fun ListContent(
                             )
                         }
                         itemsIndexed(uiState.expenses, key = { _, expense -> "fallback-time-${expense.id}" }) { index, expense ->
-                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit)
+                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, isScrolling = listState.isScrollInProgress)
                         }
                     } else {
                         uiState.timeOfDayGroupedExpenses.forEach { (timeOfDay, expensesInTimeOfDay) ->
@@ -221,7 +239,14 @@ internal fun ListContent(
                                     }
                                 }
                                 itemsIndexed(expensesInTimeOfDay, key = { _, expense -> expense.id }) { index, expense ->
-                                    AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, Modifier.padding(top = 2.dp, bottom = 2.dp))
+                                    AnimatedExpenseListItem(
+                                        expense = expense, 
+                                        index = index, 
+                                        onDeleteClick = onDeleteExpense, 
+                                        onEditClick = onNavigateToExpenseEdit, 
+                                        isScrolling = listState.isScrollInProgress, 
+                                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                                    )
                                 }
                             }
                         }
@@ -236,7 +261,7 @@ internal fun ListContent(
                             )
                         }
                         itemsIndexed(uiState.expenses, key = { _, expense -> "fallback-category-${expense.id}" }) { index, expense ->
-                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit)
+                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, isScrolling = listState.isScrollInProgress)
                         }
                     } else {
                         uiState.groupedExpenses.forEach { (category, expensesInCategory) ->
@@ -271,7 +296,14 @@ internal fun ListContent(
                                     }
                                 }
                                 itemsIndexed(expensesInCategory, key = { _, expense -> expense.id }) { index, expense ->
-                                    AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, Modifier.padding(top = 2.dp, bottom = 2.dp))
+                                     AnimatedExpenseListItem(
+                                        expense = expense, 
+                                        index = index, 
+                                        onDeleteClick = onDeleteExpense, 
+                                        onEditClick = onNavigateToExpenseEdit, 
+                                        isScrolling = listState.isScrollInProgress, 
+                                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                                    )
                                 }
                             }
                         }
@@ -388,7 +420,10 @@ fun CustomGroupToggleSwitchCategorySelectedPreview() {
 fun AnimatedExpenseListItemPreview() {
     AnimatedExpenseListItem(
         expense = Expense(id = 1, title = "Lunch Preview", amount = 12.75, category = CategoryType.FOOD.name, date = System.currentTimeMillis(), notes = "With colleagues"),
-        index = 0, onDeleteClick = {}, onEditClick = {}
+        index = 0, 
+        onDeleteClick = {}, 
+        onEditClick = {},
+        isScrolling = false // Added for preview
     )
 }
 
