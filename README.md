@@ -1,19 +1,35 @@
-# Smart Daily Expense Tracker
+# Expense Buddy
+
+[App Logo - To be added]
 
 ## App Overview
 
-Smart Daily Expense Tracker is an Android application built with Jetpack Compose that helps users track their daily expenses efficiently. It features a clean, modern UI with both light and dark themes, and provides functionalities for expense entry, categorized listings, and insightful reports.
+Expense Buddy is an Android application built with Jetpack Compose that helps users track their daily expenses efficiently. It features a clean, modern UI with both light and dark themes, and provides functionalities for expense entry, categorized listings, and insightful reports.
 
 ## AI Usage Summary
 
-This project heavily utilized an AI assistant for various development tasks, including initial code generation for common UI composables (like loading indicators, error messages, and section titles) and refactoring existing screens to use these components. The AI also played a key role in implementing features like API-level-aware file saving to the Downloads directory by generating and modifying ViewModel code. Furthermore, the AI assisted in code cleanup and organization, such as consolidating navigation definitions and setting up documentation files like this `README.md` and the `AI_LOG.md`.
+This project utilized an AI assistant for a variety of development tasks throughout the session:
+*   **Initial Project Planning:** Interpreted project requirements from `requirements.md` to generate an initial `tasks.md`, outlining architectural choices (MVVM, Clean Architecture), screen structure, and key features.
+*   **Common UI Component Creation:** Generated boilerplate and core logic for reusable UI elements like `FullScreenLoadingIndicator`, `ScreenErrorMessage`, `EmptyStateView`, and `SectionTitle` in `CommonUIComponents.kt`.
+*   **Screen Refactoring:** Systematically updated multiple screens (`ExpenseListComponents.kt`, `ExpenseListScreen.kt`, `ExpenseReportScreen.kt`, `ExpenseEntryScreen.kt`, `SettingsScreen.kt`) to incorporate the newly created common UI components, enhancing consistency and maintainability.
+*   **API Level Compatibility:** Addressed `MediaStore` API level errors by modifying ViewModel code (`ExpenseReportViewModel.kt`) to handle file saving to the Downloads directory correctly across different Android versions (API <29 and API 29+).
+*   **Navigation Consolidation:** Identified and refactored redundant navigation definitions by modifying `AppNavigation.kt` to use a centralized `Screen` sealed class and `bottomNavItems` from `AppDestinations.kt`.
+*   **Documentation:** Assisted in creating and iteratively updating project documentation, including this `README.md` file and the `AI_LOG.md` file, which logs key prompts and interactions.
 
 ## Key Prompt Logs
 
 Below are a few examples of key prompts used during development. For a more comprehensive log of AI interactions, please see the `AI_LOG.md` file in the project root.
 
 1.  **Project Initialization and Task Planning:**
-    *   **User Prompt:** "You are the best android developer in the world. Go through the requirements.md file understand the project requirement and create a tasks.md accordingly. Then proceed building the project..." (see `AI_LOG.md` for full prompt)
+    *   **User Prompt:** "You are the best android developer in the world. Go through the requirements.md file understand the project requirement and create a tasks.md accordingly. Then proceed building the project.
+
+- Make sure to use MVVM and clean architecture for the project and make the UI look modern and elegant by using good color schemes.
+
+- We will create three screens - Expenselist, expense report and settings, for the expense entry screen use fab in the expense list screen that opens up the entry screen
+
+- Import all the reqruired dependecies even for the icons (if required) and for showing bar graphs and Room db
+
+update the tasks.md file accordingly"
     *   **Effectiveness:** Set the stage for project structure and initial task breakdown.
 
 2.  **Refactoring with Common UI Components:**
