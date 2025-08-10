@@ -27,11 +27,11 @@ import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
+import androidx.compose.material3.Button // This will be unused now, but let's keep it for now, can be removed by optimize imports later
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+// import androidx.compose.material3.CircularProgressIndicator // This will be unused directly here
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.yourssohail.smartdailyexpensetracker.ui.common.ProgressButton // Added import
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import java.io.File
 import java.io.FileInputStream
@@ -331,10 +332,10 @@ fun ExpenseEntryScreen(
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
-                            OutlinedButton(onClick = viewModel::dismissDuplicateWarning) { // Changed here
+                            OutlinedButton(onClick = viewModel::dismissDuplicateWarning) { 
                                 Text("Cancel")
                             }
-                            Button(onClick = viewModel::forceSaveExpense) {
+                            androidx.compose.material3.Button(onClick = viewModel::forceSaveExpense) {
                                 Text("Save Anyway")
                             }
                         }
@@ -342,17 +343,13 @@ fun ExpenseEntryScreen(
                 }
             }
 
-            Button(
+            ProgressButton(
+                text = if (uiState.isEditMode) "Update Expense" else "Save Expense",
                 onClick = viewModel::saveExpense,
-                enabled = uiState.isSaveEnabled && !uiState.isLoading && !uiState.isDuplicateWarningVisible,
+                isLoading = uiState.isLoading,
+                enabled = uiState.isSaveEnabled && !uiState.isDuplicateWarningVisible,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                } else {
-                    Text(if (uiState.isEditMode) "Update Expense" else "Save Expense")
-                }
-            }
+            )
         }
     }
 }
