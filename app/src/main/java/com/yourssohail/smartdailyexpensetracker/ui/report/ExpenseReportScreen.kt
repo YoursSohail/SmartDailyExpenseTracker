@@ -2,6 +2,7 @@ package com.yourssohail.smartdailyexpensetracker.ui.report
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,23 +15,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.PictureAsPdf
+import androidx.compose.material.icons.outlined.TableView
+import androidx.compose.material.icons.outlined.TextSnippet // Added for Share as Text
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -39,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ir.ehsannarmani.compose_charts.models.Bars
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -54,19 +65,37 @@ fun ExpenseReportScreen(
         NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     }
 
+    var showExportBottomSheet by remember { mutableStateOf(false) } // Renamed
+    val exportBottomSheetState = rememberModalBottomSheetState() // Renamed
+
+    var showShareOptionsBottomSheet by remember { mutableStateOf(false) }
+    val shareOptionsSheetState = rememberModalBottomSheetState()
+
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is ReportEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
-                is ReportEvent.ShareReport -> {
+                is ReportEvent.ShareReport -> { // Handles text sharing
                     val sendIntent: Intent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_TEXT, event.summary)
                         type = "text/plain"
                     }
                     val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }
+                is ReportEvent.ShareFile -> { // Handles file sharing (PDF/CSV)
+                    val sendIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_STREAM, event.uri)
+                        type = event.mimeType
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val shareIntent = Intent.createChooser(sendIntent, "Share Report File")
                     context.startActivity(shareIntent)
                 }
             }
@@ -78,8 +107,11 @@ fun ExpenseReportScreen(
             TopAppBar(
                 title = { Text("Expense Report") },
                 actions = {
-                    IconButton(onClick = viewModel::onShareReportClicked) {
-                        Icon(Icons.Default.Share, contentDescription = "Share Report")
+                    IconButton(onClick = { showExportBottomSheet = true }) {
+                        Icon(Icons.Default.Download, contentDescription = "Export Report")
+                    }
+                    IconButton(onClick = { showShareOptionsBottomSheet = true }) { // Updated onClick
+                        Icon(Icons.Default.Share, contentDescription = "Share Report Options")
                     }
                 }
             )
@@ -165,28 +197,125 @@ fun ExpenseReportScreen(
                                 }
                             }
                         }
+                    }
+                }
+            }
 
-                         ReportSectionCard(title = "Actions") {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Button(
-                                    onClick = viewModel::onExportPdfClicked,
-                                    modifier = Modifier.weight(1f),
-                                    enabled = uiState.expensesOverLast7Days.isNotEmpty() || viewModel.useDummyDataForReport
-                                ) {
-                                    Text("Export PDF")
-                                }
-                                Button(
-                                    onClick = viewModel::onExportCsvClicked,
-                                    modifier = Modifier.weight(1f),
-                                    enabled = uiState.expensesOverLast7Days.isNotEmpty() || viewModel.useDummyDataForReport
-                                ) {
-                                    Text("Export CSV")
+            // Export Bottom Sheet
+            if (showExportBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showExportBottomSheet = false },
+                    sheetState = exportBottomSheetState,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                ) {
+                    Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                        ListItem(
+                            headlineContent = { Text("Export as CSV") },
+                            leadingContent = { 
+                                Icon(
+                                    Icons.Outlined.TableView, 
+                                    contentDescription = "Export as CSV"
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.onExportCsvClicked()
+                                scope.launch {
+                                    exportBottomSheetState.hide()
+                                }.invokeOnCompletion { 
+                                    if (!exportBottomSheetState.isVisible) {
+                                        showExportBottomSheet = false
+                                    }
                                 }
                             }
-                         }
+                        )
+                        ListItem(
+                            headlineContent = { Text("Export as PDF") },
+                            leadingContent = { 
+                                Icon(
+                                    Icons.Outlined.PictureAsPdf, 
+                                    contentDescription = "Export as PDF"
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.onExportPdfClicked()
+                                scope.launch {
+                                    exportBottomSheetState.hide()
+                                }.invokeOnCompletion { 
+                                    if (!exportBottomSheetState.isVisible) {
+                                        showExportBottomSheet = false
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Share Options Bottom Sheet
+            if (showShareOptionsBottomSheet) {
+                ModalBottomSheet(
+                    onDismissRequest = { showShareOptionsBottomSheet = false },
+                    sheetState = shareOptionsSheetState,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                ) {
+                    Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                        ListItem(
+                            headlineContent = { Text("Share as PDF") },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Outlined.PictureAsPdf,
+                                    contentDescription = "Share as PDF"
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.onSharePdfRequested()
+                                scope.launch {
+                                    shareOptionsSheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!shareOptionsSheetState.isVisible) {
+                                        showShareOptionsBottomSheet = false
+                                    }
+                                }
+                            }
+                        )
+                        ListItem(
+                            headlineContent = { Text("Share as CSV") },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Outlined.TableView,
+                                    contentDescription = "Share as CSV"
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.onShareCsvRequested()
+                                scope.launch {
+                                    shareOptionsSheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!shareOptionsSheetState.isVisible) {
+                                        showShareOptionsBottomSheet = false
+                                    }
+                                }
+                            }
+                        )
+                        ListItem(
+                            headlineContent = { Text("Share as Text") },
+                            leadingContent = {
+                                Icon(
+                                    Icons.Outlined.TextSnippet,
+                                    contentDescription = "Share as Text"
+                                )
+                            },
+                            modifier = Modifier.clickable {
+                                viewModel.onShareTextRequested()
+                                scope.launch {
+                                    shareOptionsSheetState.hide()
+                                }.invokeOnCompletion {
+                                    if (!shareOptionsSheetState.isVisible) {
+                                        showShareOptionsBottomSheet = false
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }

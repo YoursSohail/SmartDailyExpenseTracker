@@ -6,9 +6,12 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
@@ -26,6 +29,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.IOException
 import java.io.OutputStream
 import java.text.NumberFormat
@@ -91,7 +95,8 @@ data class ExpenseReportUiState(
 
 sealed class ReportEvent {
     data class ShowToast(val message: String) : ReportEvent()
-    data class ShareReport(val summary: String) : ReportEvent()
+    data class ShareReport(val summary: String) : ReportEvent() // For text sharing
+    data class ShareFile(val uri: Uri, val mimeType: String) : ReportEvent() // For file sharing
 }
 
 @HiltViewModel
@@ -115,6 +120,14 @@ class ExpenseReportViewModel @Inject constructor(
 
     init {
         loadReportData()
+    }
+
+    private fun getShareCacheDir(context: Context): File {
+        val cacheDir = File(context.cacheDir, "share_temp")
+        if (!cacheDir.exists()) {
+            cacheDir.mkdirs()
+        }
+        return cacheDir
     }
 
     private fun generateDummyExpensesForLast7Days(): List<Expense> {
@@ -277,7 +290,8 @@ class ExpenseReportViewModel @Inject constructor(
         }
     }
 
-    fun onShareReportClicked() {
+    // Existing function for sharing text summary, will be used by "Share as Text"
+    fun onShareTextRequested() {
         viewModelScope.launch {
             val summary = generateReportSummaryText()
             _eventFlow.emit(ReportEvent.ShareReport(summary))
@@ -317,6 +331,7 @@ class ExpenseReportViewModel @Inject constructor(
         return csvBuilder.toString()
     }
 
+    // --- Methods for Exporting to Downloads (existing functionality) ---
     fun onExportCsvClicked() {
         viewModelScope.launch {
             val expensesToExport = uiState.value.expensesOverLast7Days
@@ -328,7 +343,7 @@ class ExpenseReportViewModel @Inject constructor(
             val timestamp = fileTimestampFormat.format(Date())
             val fileName = "ExpenseReport_Last7Days_$timestamp.csv"
 
-            saveCsvFile(fileName, csvContent).onSuccess {
+            saveCsvFileToDownloads(fileName, csvContent).onSuccess {
                 _eventFlow.emit(ReportEvent.ShowToast("CSV saved to Downloads"))
             }.onFailure { exception ->
                 _eventFlow.emit(ReportEvent.ShowToast("Failed to save CSV: ${exception.localizedMessage ?: "Unknown error"}"))
@@ -346,7 +361,7 @@ class ExpenseReportViewModel @Inject constructor(
             val timestamp = fileTimestampFormat.format(Date())
             val fileName = "ExpenseReport_Last7Days_$timestamp.pdf"
 
-            generateAndSavePdfReport(fileName, reportData).onSuccess {
+            generateAndSavePdfReportToDownloads(fileName, reportData).onSuccess {
                 _eventFlow.emit(ReportEvent.ShowToast("PDF saved to Downloads"))
             }.onFailure { exception ->
                 _eventFlow.emit(ReportEvent.ShowToast("Failed to save PDF: ${exception.localizedMessage ?: "Unknown error"}"))
@@ -354,7 +369,7 @@ class ExpenseReportViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveCsvFile(fileName: String, csvContent: String): Result<Unit> {
+    private suspend fun saveCsvFileToDownloads(fileName: String, csvContent: String): Result<Unit> { // Renamed for clarity
         return withContext(Dispatchers.IO) {
             try {
                 val contentValues = ContentValues().apply {
@@ -388,7 +403,7 @@ class ExpenseReportViewModel @Inject constructor(
         }
     }
 
-    private suspend fun generateAndSavePdfReport(
+    private suspend fun generateAndSavePdfReportToDownloads( // Renamed for clarity
         fileName: String,
         reportData: ExpenseReportUiState
     ): Result<Unit> {
@@ -477,6 +492,108 @@ class ExpenseReportViewModel @Inject constructor(
                 Result.failure(e)
             } finally {
                 pdfDocument.close()
+            }
+        }
+    }
+
+    // --- Methods for Sharing via Cache and FileProvider ---
+    private suspend fun saveCsvToCacheForSharing(context: Context, fileName: String, csvContent: String): Result<Uri> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val shareDir = getShareCacheDir(context)
+                val file = File(shareDir, fileName)
+                file.writeText(csvContent)
+                val authority = "${context.packageName}.provider" // Ensure this matches AndroidManifest
+                val uri = FileProvider.getUriForFile(context, authority, file)
+                Result.success(uri)
+            } catch (e: Exception) {
+                Log.e("ExpenseReportViewModel", "Error saving CSV to cache for sharing", e)
+                Result.failure(e)
+            }
+        }
+    }
+
+    private suspend fun generateAndCachePdfForSharing(context: Context, fileName: String, reportData: ExpenseReportUiState): Result<Uri> {
+        return withContext(Dispatchers.IO) {
+            val pdfDocument = PdfDocument()
+            try {
+                val pageInfo = PdfDocument.PageInfo.Builder(PdfConstants.A4_PAGE_WIDTH, PdfConstants.A4_PAGE_HEIGHT, 1).create()
+                val page = pdfDocument.startPage(pageInfo)
+                val canvas = page.canvas
+                val titlePaint = PdfConstants.titlePaint()
+                val headerPaint = PdfConstants.headerPaint()
+                val bodyPaint = PdfConstants.bodyPaint()
+                var yPosition = PdfConstants.DEFAULT_MARGIN_FLOAT
+                val xMargin = PdfConstants.DEFAULT_MARGIN_FLOAT
+
+                canvas.drawText("Expense Report - Last 7 Days", xMargin, yPosition, titlePaint)
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT * 1.5f
+                canvas.drawText("Daily Totals:", xMargin, yPosition, headerPaint)
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT
+                reportData.dailyTotals.forEach {
+                    canvas.drawText("${it.formattedDate}: ${currencyFormatter.format(it.totalAmount)}", xMargin, yPosition, bodyPaint)
+                    yPosition += PdfConstants.LINE_SPACING_FLOAT
+                }
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT
+                val totalAllCategoriesFormatted = currencyFormatter.format(reportData.totalForAllCategories)
+                canvas.drawText("Category Totals (Total: $totalAllCategoriesFormatted):", xMargin, yPosition, headerPaint)
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT
+                reportData.categoryTotals.forEach {
+                    val categoryName = it.category.name.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() }
+                    canvas.drawText("$categoryName (${it.percentage.roundToInt()}%): ${currencyFormatter.format(it.totalAmount)}", xMargin, yPosition, bodyPaint)
+                    yPosition += PdfConstants.LINE_SPACING_FLOAT
+                }
+                pdfDocument.finishPage(page)
+
+                val shareDir = getShareCacheDir(context)
+                val file = File(shareDir, fileName)
+                file.outputStream().use { fos -> pdfDocument.writeTo(fos) }
+                pdfDocument.close()
+
+                val authority = "${context.packageName}.provider" // Ensure this matches AndroidManifest
+                val uri = FileProvider.getUriForFile(context, authority, file)
+                Result.success(uri)
+            } catch (e: Exception) {
+                Log.e("ExpenseReportViewModel", "Error generating/caching PDF for sharing", e)
+                pdfDocument.close() // Important to close on error too
+                Result.failure(e)
+            }
+        }
+    }
+
+    fun onSharePdfRequested() {
+        viewModelScope.launch {
+            val reportData = uiState.value
+            if (reportData.expensesOverLast7Days.isEmpty() && !useDummyDataForReport) {
+                _eventFlow.emit(ReportEvent.ShowToast("No data to share for PDF."))
+                return@launch
+            }
+            val timestamp = fileTimestampFormat.format(Date())
+            val fileName = "ExpenseReport_Share_$timestamp.pdf"
+
+            generateAndCachePdfForSharing(applicationContext, fileName, reportData).onSuccess {
+                _eventFlow.emit(ReportEvent.ShareFile(it, "application/pdf"))
+            }.onFailure { exception ->
+                _eventFlow.emit(ReportEvent.ShowToast("Failed to prepare PDF for sharing: ${exception.localizedMessage ?: "Unknown error"}"))
+            }
+        }
+    }
+
+    fun onShareCsvRequested() {
+        viewModelScope.launch {
+            val expensesToShare = uiState.value.expensesOverLast7Days
+            if (expensesToShare.isEmpty() && !useDummyDataForReport) {
+                _eventFlow.emit(ReportEvent.ShowToast("No data to share for CSV."))
+                return@launch
+            }
+            val csvContent = generateCsvContent(expensesToShare)
+            val timestamp = fileTimestampFormat.format(Date())
+            val fileName = "ExpenseReport_Share_$timestamp.csv"
+
+            saveCsvToCacheForSharing(applicationContext, fileName, csvContent).onSuccess {
+                _eventFlow.emit(ReportEvent.ShareFile(it, "text/csv"))
+            }.onFailure { exception ->
+                _eventFlow.emit(ReportEvent.ShowToast("Failed to prepare CSV for sharing: ${exception.localizedMessage ?: "Unknown error"}"))
             }
         }
     }
