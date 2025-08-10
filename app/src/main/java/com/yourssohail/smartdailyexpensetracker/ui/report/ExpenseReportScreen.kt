@@ -19,8 +19,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.TableView
-import androidx.compose.material.icons.outlined.TextSnippet // Added for Share as Text
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.TextSnippet
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -48,6 +47,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
+import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
+import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
+import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import ir.ehsannarmani.compose_charts.models.Bars
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -65,8 +68,8 @@ fun ExpenseReportScreen(
         NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     }
 
-    var showExportBottomSheet by remember { mutableStateOf(false) } // Renamed
-    val exportBottomSheetState = rememberModalBottomSheetState() // Renamed
+    var showExportBottomSheet by remember { mutableStateOf(false) } 
+    val exportBottomSheetState = rememberModalBottomSheetState() 
 
     var showShareOptionsBottomSheet by remember { mutableStateOf(false) }
     val shareOptionsSheetState = rememberModalBottomSheetState()
@@ -79,7 +82,7 @@ fun ExpenseReportScreen(
                 is ReportEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
-                is ReportEvent.ShareReport -> { // Handles text sharing
+                is ReportEvent.ShareReport -> { 
                     val sendIntent: Intent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_TEXT, event.summary)
@@ -88,7 +91,7 @@ fun ExpenseReportScreen(
                     val shareIntent = Intent.createChooser(sendIntent, null)
                     context.startActivity(shareIntent)
                 }
-                is ReportEvent.ShareFile -> { // Handles file sharing (PDF/CSV)
+                is ReportEvent.ShareFile -> { 
                     val sendIntent = Intent().apply {
                         action = Intent.ACTION_SEND
                         putExtra(Intent.EXTRA_STREAM, event.uri)
@@ -110,7 +113,7 @@ fun ExpenseReportScreen(
                     IconButton(onClick = { showExportBottomSheet = true }) {
                         Icon(Icons.Default.Download, contentDescription = "Export Report")
                     }
-                    IconButton(onClick = { showShareOptionsBottomSheet = true }) { // Updated onClick
+                    IconButton(onClick = { showShareOptionsBottomSheet = true }) { 
                         Icon(Icons.Default.Share, contentDescription = "Share Report Options")
                     }
                 }
@@ -120,20 +123,16 @@ fun ExpenseReportScreen(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) { 
             when {
                 uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    FullScreenLoadingIndicator()
                 }
                 uiState.errorMessage != null -> {
-                    Text(
-                        text = uiState.errorMessage!!,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    ScreenErrorMessage(
+                        message = uiState.errorMessage!!,
+                        onRetry = { viewModel.loadReportData() } 
                     )
                 }
                 uiState.expensesOverLast7Days.isEmpty() && !viewModel.useDummyDataForReport -> {
-                    Text(
-                        text = "No expenses recorded in the last 7 days to generate a report.",
-                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
-                    )
+                    EmptyStateView(message = "No expenses recorded in the last 7 days to generate a report.")
                 }
                 else -> {
                     Column(
@@ -143,7 +142,7 @@ fun ExpenseReportScreen(
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text("Daily Spending Chart (Last 7 Days)", style = MaterialTheme.typography.titleMedium)
+                        SectionTitle(text = "Daily Spending Chart (Last 7 Days)")
 
                         if (uiState.dailyTotals.isNotEmpty()) {
                             val primaryColor = MaterialTheme.colorScheme.primary
@@ -189,7 +188,7 @@ fun ExpenseReportScreen(
                                     }
                                     LinearProgressIndicator(
                                         progress = { categoryTotal.percentage / 100f },
-                                        color = categoryTotal.category.color, // Added category color here
+                                        color = categoryTotal.category.color, 
                                         modifier = Modifier.fillMaxWidth().height(6.dp)
                                     )
                                     Spacer(Modifier.height(4.dp))

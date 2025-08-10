@@ -3,9 +3,7 @@ package com.yourssohail.smartdailyexpensetracker.ui.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -24,6 +22,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourssohail.smartdailyexpensetracker.data.model.ThemeSetting
+import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle // Added import
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +42,9 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            Text(
+            SectionTitle(
                 text = "Theme Preferences",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 8.dp) // Retained padding
             )
 
             Column(Modifier.selectableGroup()) {

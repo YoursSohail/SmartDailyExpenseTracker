@@ -13,7 +13,7 @@ import com.yourssohail.smartdailyexpensetracker.domain.usecase.DetectDuplicateEx
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpenseByIdUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.ValidateExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.ValidationResult
-import com.yourssohail.smartdailyexpensetracker.ui.navigation.AppDestinations
+import com.yourssohail.smartdailyexpensetracker.ui.navigation.EXPENSE_ID_ARG
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -83,12 +83,12 @@ class ExpenseEntryViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<ExpenseEntryEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    val categories: List<CategoryType> = CategoryType.values().toList()
+    val categories: List<CategoryType> = CategoryType.entries.toList()
 
     private val indianCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
 
     init {
-        val expenseId = savedStateHandle.get<Long>(AppDestinations.EXPENSE_ID_ARG)
+        val expenseId = savedStateHandle.get<Long>(EXPENSE_ID_ARG)
         if (expenseId != null && expenseId != -1L) {
             _uiState.update { it.copy(isLoading = true, isEditMode = true, currentExpenseId = expenseId) }
             viewModelScope.launch {

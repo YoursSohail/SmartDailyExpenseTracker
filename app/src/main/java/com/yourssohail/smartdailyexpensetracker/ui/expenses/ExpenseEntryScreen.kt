@@ -63,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import java.io.File
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
@@ -243,7 +244,7 @@ fun ExpenseEntryScreen(
 
             // --- Receipt Image Section ---
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-                Text("Receipt Image (Optional)", style = MaterialTheme.typography.labelLarge)
+                SectionTitle(text = "Receipt Image (Optional)", style = MaterialTheme.typography.labelLarge)
                 Spacer(Modifier.height(8.dp))
 
                 if (uiState.selectedReceiptUri == null) {

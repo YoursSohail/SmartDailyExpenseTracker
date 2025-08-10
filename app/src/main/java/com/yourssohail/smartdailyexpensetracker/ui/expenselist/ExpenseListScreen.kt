@@ -1,31 +1,18 @@
 package com.yourssohail.smartdailyexpensetracker.ui.expenselist
 
-// Imports to be added/adjusted:
-// Removed: animateDpAsState, background, border, Box, offset, size, CircleShape, clip, Dp
-// Retained: Category and Schedule icons for now, in case they are used elsewhere,
-// but they are prime candidates for removal if CustomGroupToggleSwitch is self-contained.
-
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-// import androidx.compose.foundation.background // Removed
-// import androidx.compose.foundation.border // Removed
 import androidx.compose.foundation.layout.Arrangement
-// import androidx.compose.foundation.layout.Box // Removed
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-// import androidx.compose.foundation.layout.height // Potentially removable if not used by other elements
 import androidx.compose.foundation.layout.padding
-// import androidx.compose.foundation.layout.size // Potentially removable
 import androidx.compose.foundation.layout.width
-// import androidx.compose.foundation.shape.CircleShape // Removed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-// import androidx.compose.material.icons.filled.Category // Kept for now, verify usage
-// import androidx.compose.material.icons.filled.Schedule // Kept for now, verify usage
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -76,7 +63,7 @@ fun ExpenseListScreen(
         }
     }
     LaunchedEffect(Unit) {
-        viewModel.refreshData()
+        viewModel.refreshData() // Initial data load
     }
 
     Scaffold(
@@ -92,13 +79,12 @@ fun ExpenseListScreen(
                         Icon(Icons.Default.DateRange, contentDescription = "Select Date")
                     }
 
-                    // Use the updated CustomGroupToggleSwitch from ExpenseListComponents.kt
                     CustomGroupToggleSwitch(
                         currentOption = uiState.groupBy,
                         onOptionSelected = viewModel::setGroupBy,
                         modifier = Modifier.padding(horizontal = 8.dp) 
                     )
-                    Spacer(modifier = Modifier.width(4.dp)) // Maintain spacing if needed
+                    Spacer(modifier = Modifier.width(4.dp)) 
                 }
             )
         },
@@ -141,7 +127,8 @@ fun ExpenseListScreen(
             ListContent(
                 uiState = uiState,
                 onDeleteExpense = viewModel::deleteExpense,
-                onNavigateToExpenseEdit = onNavigateToExpenseEdit
+                onNavigateToExpenseEdit = onNavigateToExpenseEdit,
+                onRefresh = viewModel::refreshData // Passed the refresh data function
             )
         }
     }

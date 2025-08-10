@@ -27,23 +27,22 @@ import com.yourssohail.smartdailyexpensetracker.ui.expenses.ExpenseEntryScreen
 import com.yourssohail.smartdailyexpensetracker.ui.report.ExpenseReportScreen
 import com.yourssohail.smartdailyexpensetracker.ui.settings.SettingsScreen
 
-// Define route constants and argument keys
-object AppDestinations {
-    const val EXPENSE_ID_ARG = "expenseId"
-    const val EXPENSE_LIST_ROUTE = "expense_list_screen"
-    const val EXPENSE_ENTRY_BASE_ROUTE = "expense_entry_screen"
-    const val EXPENSE_ENTRY_ROUTE_WITH_ARG =
-        "$EXPENSE_ENTRY_BASE_ROUTE?$EXPENSE_ID_ARG={$EXPENSE_ID_ARG}"
+// Using Screen and bottomNavItems from AppDestinations.kt
 
-    fun expenseEntryRouteWithId(expenseId: Long) =
-        "$EXPENSE_ENTRY_BASE_ROUTE?$EXPENSE_ID_ARG=$expenseId"
+const val EXPENSE_ID_ARG = "expenseId"
 
-    const val EXPENSE_REPORT_ROUTE = "expense_report_screen"
-    const val SETTINGS_ROUTE = "settings_screen"
+// Helper to construct the route for ExpenseEntry with optional argument
+fun expenseEntryRouteDefinition(): String {
+    return "${Screen.ExpenseEntry.route}?$EXPENSE_ID_ARG={$EXPENSE_ID_ARG}"
 }
 
-// Assuming bottomNavItems is imported from where it's defined (e.g., another file in this package)
-// and Screen sealed class is also available.
+fun navigateToExpenseEntry(expenseId: Long? = null): String {
+    return if (expenseId != null && expenseId != -1L) {
+        "${Screen.ExpenseEntry.route}?$EXPENSE_ID_ARG=$expenseId"
+    } else {
+        Screen.ExpenseEntry.route
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,8 +53,9 @@ fun AppNavigation() {
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
+            // bottomNavItems is imported from AppDestinations.kt
             val screensWithBottomBar = remember { bottomNavItems.map { it.route } }
-            val showBottomBar = currentRoute in screensWithBottomBar
+            val showBottomBar = screensWithBottomBar.any { currentRoute?.startsWith(it) == true }
 
             if (showBottomBar) {
                 NavigationBar(
@@ -88,24 +88,24 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = AppDestinations.EXPENSE_LIST_ROUTE,
+            startDestination = Screen.ExpenseList.route, // Use Screen object
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(AppDestinations.EXPENSE_LIST_ROUTE) {
+            composable(Screen.ExpenseList.route) { // Use Screen object
                 ExpenseListScreen(
                     onNavigateToExpenseEntry = {
-                        navController.navigate(AppDestinations.EXPENSE_ENTRY_BASE_ROUTE)
+                        navController.navigate(navigateToExpenseEntry()) // Navigate to base route for new entry
                     },
                     onNavigateToExpenseEdit = { expenseId ->
-                        navController.navigate(AppDestinations.expenseEntryRouteWithId(expenseId))
+                        navController.navigate(navigateToExpenseEntry(expenseId))
                     }
                 )
             }
             composable(
-                route = AppDestinations.EXPENSE_ENTRY_ROUTE_WITH_ARG,
-                arguments = listOf(navArgument(AppDestinations.EXPENSE_ID_ARG) {
+                route = expenseEntryRouteDefinition(), // Use helper for route definition
+                arguments = listOf(navArgument(EXPENSE_ID_ARG) {
                     type = NavType.LongType
-                    defaultValue = -1L
+                    defaultValue = -1L // Default for new expense
                 })
             ) {
                 val previousBackStackEntry = remember(navController.previousBackStackEntry) {
@@ -117,15 +117,16 @@ fun AppNavigation() {
 
                 ExpenseEntryScreen(
                     onExpenseSaved = {
+                        // Attempt to refresh data in the ExpenseListViewModel
                         expenseListViewModel?.refreshData()
                         navController.popBackStack()
                     }
                 )
             }
-            composable(AppDestinations.EXPENSE_REPORT_ROUTE) {
+            composable(Screen.ExpenseReport.route) { // Use Screen object
                 ExpenseReportScreen()
             }
-            composable(AppDestinations.SETTINGS_ROUTE) {
+            composable(Screen.Settings.route) { // Use Screen object
                 SettingsScreen()
             }
         }

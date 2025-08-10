@@ -41,7 +41,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+// import androidx.compose.material3.CircularProgressIndicator // No longer directly used here
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,6 +71,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
+import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
+import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
+import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -92,7 +96,6 @@ private fun getTimeOfDayHeaderPresentation(timeOfDay: TimeOfDay): Pair<String, S
 @Composable
 private fun getCategoryHeaderPresentation(category: CategoryType): Pair<ImageVector, Color> {
     val icon = Icons.AutoMirrored.Filled.Label
-    // Color is now directly from the enum
     return icon to category.color
 }
 
@@ -131,37 +134,29 @@ internal fun AnimatedExpenseListItem(
     index: Int,
     onDeleteClick: (Expense) -> Unit,
     onEditClick: (Long) -> Unit,
-    isScrolling: Boolean, // Current scroll state from LazyListState
+    isScrolling: Boolean, 
     modifier: Modifier = Modifier
 ) {
-    // This state tracks if we intend for the item to be visible.
     var targetVisible by remember(expense.id) { mutableStateOf(false) }
-
-    // This LaunchedEffect runs when the item is first composed, or if 'isScrolling' changes
-    // for an item that isn't yet visible. Its goal is to set 'targetVisible = true'.
-    // The delay before setting it true depends on the scroll state.
     LaunchedEffect(key1 = expense.id, key2 = isScrolling) {
-        if (!targetVisible) { // Only proceed if not already targeted for visibility
-            val delayMillis = if (isScrolling) 0L else index * 70L // No delay if scrolling
-            if (delayMillis > 0L) { // Only actually delay if needed
+        if (!targetVisible) { 
+            val delayMillis = if (isScrolling) 0L else index * 70L 
+            if (delayMillis > 0L) { 
                 kotlinx.coroutines.delay(delayMillis)
             }
-            // After any potential delay, mark as ready to be visible.
-            // If isScrolling changed during the delay, this effect would have been
-            // cancelled and restarted with the new 'isScrolling' value.
             targetVisible = true
         }
     }
 
     AnimatedVisibility(
-        visible = targetVisible, // Becomes true after the (conditional) delay
+        visible = targetVisible, 
         enter = slideInHorizontally(
             initialOffsetX = { fullWidth -> fullWidth / 2 },
-            animationSpec = tween(durationMillis = if (isScrolling) 0 else 350) // Animation duration based on current scroll state
+            animationSpec = tween(durationMillis = if (isScrolling) 0 else 350) 
         ),
         exit = slideOutHorizontally(
             targetOffsetX = { fullWidth -> fullWidth },
-            animationSpec = tween(durationMillis = 300) // Standard exit animation
+            animationSpec = tween(durationMillis = 300) 
         ),
         modifier = modifier
     ) {
@@ -174,46 +169,23 @@ internal fun AnimatedExpenseListItem(
     }
 }
 
-@Composable
-fun EmptyStateView(message: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center // Added for better centering of multi-line text
-        )
-    }
-}
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 internal fun ListContent(
     uiState: ExpenseListUiState,
     onDeleteExpense: (Expense) -> Unit,
-    onNavigateToExpenseEdit: (expenseId: Long) -> Unit
+    onNavigateToExpenseEdit: (expenseId: Long) -> Unit,
+    onRefresh: () -> Unit // Added for retry mechanism
 ) {
-    val listState = rememberLazyListState() // Added LazyListState
+    val listState = rememberLazyListState()
 
     when {
         uiState.isLoading -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            FullScreenLoadingIndicator()
         }
         uiState.errorMessage != null -> {
-            Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    text = uiState.errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+            ScreenErrorMessage(message = uiState.errorMessage, onRetry = onRefresh)
         }
         uiState.expenses.isEmpty() && !uiState.isLoading -> {
             EmptyStateView(
@@ -222,15 +194,15 @@ internal fun ListContent(
         }
         else -> {
             LazyColumn(
-                state = listState, // Passed state to LazyColumn
+                state = listState, 
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
             ) {
                 if (uiState.groupBy == GroupByOption.TIME) {
                     if (uiState.timeOfDayGroupedExpenses.values.all { it.isEmpty() } && uiState.expenses.isNotEmpty() && !uiState.isLoading) {
                          item {
-                            Text(
-                                "Could not group expenses by time of day. Displaying as list:",
+                            SectionTitle(
+                                text = "Could not group expenses by time of day. Displaying as list:",
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                             )
@@ -257,11 +229,9 @@ internal fun ListContent(
                                                 style = MaterialTheme.typography.titleMedium,
                                                 modifier = Modifier.padding(end = 8.dp)
                                             )
-                                            Text(
+                                            SectionTitle(
                                                 text = name,
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Medium,
-                                                color = MaterialTheme.colorScheme.primary
+                                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
                                             )
                                         }
                                     }
@@ -282,8 +252,8 @@ internal fun ListContent(
                 } else { // GroupByOption.CATEGORY
                     if (uiState.groupedExpenses.isEmpty() && uiState.expenses.isNotEmpty() && !uiState.isLoading) {
                          item {
-                            Text(
-                                "Could not group expenses by category. Displaying as list:",
+                             SectionTitle(
+                                text = "Could not group expenses by category. Displaying as list:",
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                             )
@@ -312,13 +282,11 @@ internal fun ListContent(
                                                 tint = iconTint
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
+                                            SectionTitle(
                                                 text = category.name.replaceFirstChar { nameChar ->
                                                     if (nameChar.isLowerCase()) nameChar.titlecase(Locale.getDefault()) else nameChar.toString()
                                                 },
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Medium,
-                                                color = iconTint
+                                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium, color = iconTint)
                                             )
                                         }
                                     }
@@ -351,7 +319,7 @@ fun CustomGroupToggleSwitch(
     val trackHeight = 32.dp
     val trackWidth = 64.dp
     val thumbDiameter = trackHeight
-    val padding = 6.dp // Padding for thumb edge spacing and icon internal padding
+    val padding = 6.dp 
 
     val isGroupedByTime = currentOption == GroupByOption.TIME
 
@@ -360,8 +328,8 @@ fun CustomGroupToggleSwitch(
         label = "thumbOffset"
     )
 
-    Box( // Track
-        modifier = modifier // Apply the passed modifier here
+    Box( 
+        modifier = modifier 
             .width(trackWidth + padding * 2)
             .height(trackHeight)
             .clip(CircleShape)
@@ -372,33 +340,33 @@ fun CustomGroupToggleSwitch(
                     if (isGroupedByTime) GroupByOption.CATEGORY else GroupByOption.TIME
                 )
             }
-            .padding(horizontal = padding), // Apply padding for icons within the track
-        contentAlignment = Alignment.CenterStart // Align thumb to start initially
+            .padding(horizontal = padding), 
+        contentAlignment = Alignment.CenterStart 
     ) {
-        // Inactive Icons on Track
+        
         Row(
             modifier = Modifier.matchParentSize(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween // Distributes icons
+            horizontalArrangement = Arrangement.SpaceBetween 
         ) {
             Icon(
                 imageVector = Icons.Filled.Schedule,
                 contentDescription = "Group by Time",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isGroupedByTime) 0f else 0.7f), // Hide if active
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isGroupedByTime) 0f else 0.7f), 
                 modifier = Modifier.size(thumbDiameter - padding * 2)
             )
             Icon(
                 imageVector = Icons.Filled.Category,
                 contentDescription = "Group by Category",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (!isGroupedByTime) 0f else 0.7f), // Hide if active
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (!isGroupedByTime) 0f else 0.7f), 
                 modifier = Modifier.size(thumbDiameter - padding * 2)
             )
         }
 
-        // Thumb
+        
         Box(
             modifier = Modifier
-                .offset(x = thumbOffset - padding) // Adjust offset for padding
+                .offset(x = thumbOffset - padding) 
                 .size(thumbDiameter)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary),
@@ -408,7 +376,7 @@ fun CustomGroupToggleSwitch(
                 imageVector = if (isGroupedByTime) Icons.Filled.Schedule else Icons.Filled.Category,
                 contentDescription = if (isGroupedByTime) "Currently grouping by Time" else "Currently grouping by Category",
                 tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(thumbDiameter - padding * 2) // Icon smaller than thumb
+                modifier = Modifier.size(thumbDiameter - padding * 2) 
             )
         }
     }
@@ -418,11 +386,11 @@ fun CustomGroupToggleSwitch(
 fun ExpenseListItem(
     expense: Expense,
     onDeleteClick: (Expense) -> Unit,
-    onEditClick: (Expense) -> Unit, // New parameter for edit action
+    onEditClick: (Expense) -> Unit, 
     modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showOptionsMenu by remember { mutableStateOf(false) } // State for dropdown menu
+    var showOptionsMenu by remember { mutableStateOf(false) } 
 
     Card(
         modifier = modifier
@@ -672,7 +640,7 @@ fun AnimatedExpenseListItemPreview() {
 @Preview(showBackground = true, name = "ListContent - Loading")
 @Composable
 fun ListContentLoadingPreview() {
-    ListContent(uiState = ExpenseListUiState(isLoading = true), onDeleteExpense = {}, onNavigateToExpenseEdit = {})
+    ListContent(uiState = ExpenseListUiState(isLoading = true), onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {})
 }
 
 @Preview(showBackground = true, name = "ListContent - Empty (Time Group)")
@@ -686,7 +654,7 @@ fun ListContentEmptyTimePreview() {
             isLoading = false,
             selectedDate = System.currentTimeMillis()
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
     )
 }
 
@@ -701,7 +669,7 @@ fun ListContentEmptyCategoryPreview() {
             isLoading = false,
             selectedDate = System.currentTimeMillis()
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
     )
 }
 
@@ -733,7 +701,7 @@ fun ListContentWithDataTimePreview() {
             totalExpenseCountForSelectedDate = allExpenses.size,
             totalSpentForSelectedDate = allExpenses.sumOf { it.amount }
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
     )
 }
 
@@ -761,7 +729,7 @@ fun ListContentWithDataCategoryPreview() {
             totalExpenseCountForSelectedDate = expensesList.size,
             totalSpentForSelectedDate = expensesList.sumOf { it.amount }
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
     )
 }
 
@@ -770,7 +738,7 @@ fun ListContentWithDataCategoryPreview() {
 fun ListContentErrorPreview() {
     ListContent(
         uiState = ExpenseListUiState(isLoading = false, errorMessage = "Failed to load expenses. Please try again."),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
     )
 }
 
