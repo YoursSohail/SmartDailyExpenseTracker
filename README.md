@@ -103,7 +103,7 @@ Below are a few examples of key prompts used during development. For a more comp
 ### Light Mode
 
 <p align="left">
-  <img src="./screenshots/light/Screenshot_20250810_174433_Expense%20Buddy.jpg" alt="Light Mode Screenshot 1" width="200" height="400"/>
+  <img src="./screenshots/light/Screenshot_20250810_231601_Expense%20Buddy.jpg" alt="Light Mode Screenshot 1" width="200" height="400"/>
   <img src="./screenshots/light/Screenshot_20250810_174442_Expense%20Buddy.jpg" alt="Light Mode Screenshot 2" width="200" height="400"/>
   <img src="./screenshots/light/Screenshot_20250810_175625_Expense%20Buddy.jpg" alt="Light Mode Screenshot 3" width="200" height="400"/>
   <img src="./screenshots/light/Screenshot_20250810_175636_Expense%20Buddy.jpg" alt="Light Mode Screenshot 4" width="200" height="400"/>
@@ -112,7 +112,7 @@ Below are a few examples of key prompts used during development. For a more comp
 ### Dark Mode
 
 <p align="left">
-  <img src="./screenshots/dark/Screenshot_20250810_175647_Expense%20Buddy.jpg" alt="Dark Mode Screenshot 1" width="200" height="400"/>
+  <img src="./screenshots/dark/Screenshot_20250810_231608_Expense%20Buddy.jpg" alt="Dark Mode Screenshot 1" width="200" height="400"/>
   <img src="./screenshots/dark/Screenshot_20250810_175656_Expense%20Buddy.jpg" alt="Dark Mode Screenshot 2" width="200" height="400"/>
   <img src="./screenshots/dark/Screenshot_20250810_175702_Expense%20Buddy.jpg" alt="Dark Mode Screenshot 3" width="200" height="400"/>
   <img src="./screenshots/dark/Screenshot_20250810_175714_Expense%20Buddy.jpg" alt="Dark Mode Screenshot 4" width="200" height="400"/>

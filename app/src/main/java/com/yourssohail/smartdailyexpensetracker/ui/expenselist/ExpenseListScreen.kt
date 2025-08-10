@@ -84,7 +84,7 @@ fun ExpenseListScreen(
     )
 
     val selectedDateFormatted = remember(uiState.selectedDate) {
-        formatDate(uiState.selectedDate, DatePatterns.FULL_DISPLAY_WITH_TIME)
+        formatDate(uiState.selectedDate, DatePatterns.DAY_DATE)
     }
     val totalSpentFormatted = remember(uiState.totalSpentForSelectedDate) {
         CURRENCY_FORMATTER_INR.format(uiState.totalSpentForSelectedDate ?: 0.0)

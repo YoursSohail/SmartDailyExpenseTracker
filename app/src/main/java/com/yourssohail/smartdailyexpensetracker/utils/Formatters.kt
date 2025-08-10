@@ -26,6 +26,7 @@ internal val CURRENCY_FORMATTER_INR: NumberFormat = NumberFormat.getCurrencyInst
 
 
 object DatePatterns {
+    const val DAY_DATE = "EEE, dd MMM yyyy"
     const val SHORT_COMPONENTS = "dd MMM yyyy"
     const val FULL_DISPLAY_WITH_TIME = "EEE, dd MMM yyyy, hh:mm a"
     const val MEDIUM_DATETIME_DISPLAY = "dd MMM yyyy, hh:mm a"
