@@ -120,7 +120,7 @@ Below are a few examples of key prompts used during development. For a more comp
 
 ## Demo Video
 
-[Link to Demo Video](./demo.mp4)
+[Link to Demo Video](https://drive.google.com/file/d/101ZyVbAvgxFoTjUVd7OKViE53JBORxvi/view?usp=sharing)
 
 
 ## Resume
