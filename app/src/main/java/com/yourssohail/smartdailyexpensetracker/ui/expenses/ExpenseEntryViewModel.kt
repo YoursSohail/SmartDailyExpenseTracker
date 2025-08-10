@@ -5,9 +5,9 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense // Will be used by methods like saveExpense
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
-import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository
+import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.AddExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.DetectDuplicateExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpenseByIdUseCase

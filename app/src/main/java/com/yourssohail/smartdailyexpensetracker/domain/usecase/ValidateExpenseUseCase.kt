@@ -1,6 +1,6 @@
 package com.yourssohail.smartdailyexpensetracker.domain.usecase
 
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import javax.inject.Inject // Assuming DI
 
 /**
@@ -30,7 +30,7 @@ class ValidateExpenseUseCase @Inject constructor() { // No repository needed for
      * @return [ValidationResult.Success] if all validations pass, otherwise [ValidationResult.Error]
      *         with a specific error message.
      */
-    operator fun invoke(expense: Expense): ValidationResult {
+    operator fun invoke(expense: Expense): ValidationResult { // Updated type
         if (expense.title.isBlank()) {
             return ValidationResult.Error("Expense title cannot be blank.")
         }

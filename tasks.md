@@ -18,7 +18,7 @@
     *   [ ] Sync Gradle.
 
 3.  **Data Layer (Room & Repository):**
-    *   [ ] Define `Expense` data class/entity (`com.yourssohail.smartdailyexpensetracker.data.local.model.Expense`).
+    *   [ ] Define `ExpenseEntity` data class/entity (`com.yourssohail.smartdailyexpensetracker.data.local.entity.ExpenseEntity`).
         *   Fields: `id` (PK), `title`, `amount`, `category` (enum/String), `date` (Long/Date), `notes` (String, optional), `receiptImagePath` (String, optional).
     *   [ ] Define `Category` Enum (`com.yourssohail.smartdailyexpensetracker.data.model.CategoryType` -> Staff, Travel, Food, Utility).
     *   [ ] Create Room `ExpenseDao` (`com.yourssohail.smartdailyexpensetracker.data.local.dao.ExpenseDao`).

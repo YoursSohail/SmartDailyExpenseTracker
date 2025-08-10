@@ -5,13 +5,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.yourssohail.smartdailyexpensetracker.data.local.dao.ExpenseDao
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
+import com.yourssohail.smartdailyexpensetracker.data.local.entity.ExpenseEntity // Updated import
 
-@Database(entities = [Expense::class], version = 1, exportSchema = false)
+@Database(entities = [ExpenseEntity::class], version = 1, exportSchema = false) // Updated entity
 abstract class AppDatabase : RoomDatabase() {
 
     /**
-     * Exposes methods for interacting with the underlying [Expense] table
+     * Exposes methods for interacting with the underlying [ExpenseEntity] table
      */
     abstract fun expenseDao(): ExpenseDao
 

@@ -1,6 +1,6 @@
 package com.yourssohail.smartdailyexpensetracker.domain.usecase
 
-import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository
+import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository
 import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import javax.inject.Inject // Assuming DI

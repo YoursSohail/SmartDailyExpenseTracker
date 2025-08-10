@@ -51,7 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense // For Preview
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // For Preview, Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
 import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator

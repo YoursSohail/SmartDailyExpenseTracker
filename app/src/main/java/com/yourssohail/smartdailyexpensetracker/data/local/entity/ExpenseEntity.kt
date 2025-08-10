@@ -1,11 +1,10 @@
-package com.yourssohail.smartdailyexpensetracker.data.local.model
+package com.yourssohail.smartdailyexpensetracker.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(tableName = "expenses")
-data class Expense(
+data class ExpenseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val title: String,

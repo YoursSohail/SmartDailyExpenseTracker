@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
 import com.yourssohail.smartdailyexpensetracker.utils.DatePatterns
@@ -229,12 +229,12 @@ fun ExpenseListScreenPreview_Category() {
             selectedDateFormatted = formatDate(currentTime, DatePatterns.FULL_DISPLAY_WITH_TIME),
             totalSpentFormatted = CURRENCY_FORMATTER_INR.format(500.0),
             totalExpenseCount = 3,
-            onNavigateToExpenseEntry = {},
-            onNavigateToExpenseEdit = {},
-            onShowDatePicker = {},
-            onGroupByChanged = {},
-            onDeleteExpense = {},
-            onRefreshData = {},
+            onNavigateToExpenseEntry = { },
+            onNavigateToExpenseEdit = { },
+            onShowDatePicker = { },
+            onGroupByChanged = { },
+            onDeleteExpense = { },
+            onRefreshData = { },
             onExpenseItemClick = {}
         )
     }
@@ -277,12 +277,12 @@ fun ExpenseListScreenPreview_Time() {
             selectedDateFormatted = formatDate(currentTime, DatePatterns.FULL_DISPLAY_WITH_TIME),
             totalSpentFormatted = CURRENCY_FORMATTER_INR.format(410.0),
             totalExpenseCount = 3,
-            onNavigateToExpenseEntry = {},
-            onNavigateToExpenseEdit = {},
-            onShowDatePicker = {},
-            onGroupByChanged = {},
-            onDeleteExpense = {},
-            onRefreshData = {},
+            onNavigateToExpenseEntry = { },
+            onNavigateToExpenseEdit = { },
+            onShowDatePicker = { },
+            onGroupByChanged = { },
+            onDeleteExpense = { },
+            onRefreshData = { },
             onExpenseItemClick = {}
         )
     }
@@ -308,12 +308,12 @@ fun ExpenseListScreenPreview_Empty() {
             selectedDateFormatted = formatDate(currentTime, DatePatterns.FULL_DISPLAY_WITH_TIME),
             totalSpentFormatted = CURRENCY_FORMATTER_INR.format(0.0),
             totalExpenseCount = 0,
-            onNavigateToExpenseEntry = {},
-            onNavigateToExpenseEdit = {},
-            onShowDatePicker = {},
-            onGroupByChanged = {},
-            onDeleteExpense = {},
-            onRefreshData = {},
+            onNavigateToExpenseEntry = { },
+            onNavigateToExpenseEdit = { },
+            onShowDatePicker = { },
+            onGroupByChanged = { },
+            onDeleteExpense = { },
+            onRefreshData = { },
             onExpenseItemClick = {}
         )
     }

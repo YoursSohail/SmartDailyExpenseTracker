@@ -70,7 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
 import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
@@ -344,7 +344,7 @@ internal fun ListContent(
                         uiState.selectedDate,
                         DatePatterns.SHORT_COMPONENTS
                     )
-                }.\nTap the '+' button to add one!"
+                }.\\nTap the '+' button to add one!"
             )
         }
 

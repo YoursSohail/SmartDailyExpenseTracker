@@ -1,7 +1,7 @@
 package com.yourssohail.smartdailyexpensetracker.di
 
 import com.yourssohail.smartdailyexpensetracker.data.local.dao.ExpenseDao
-import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository
+import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepositoryImpl
 import dagger.Module
 import dagger.Provides
