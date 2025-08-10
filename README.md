@@ -25,7 +25,14 @@ This project involved the use of multiple AI tools:
 
 Below are a few examples of key prompts used during development. For a more comprehensive log of AI interactions, please see the `AI_LOG.md` file in the project root.
 
-1.  **Project Initialization and Task Planning (Gemini):**
+1.  **Initial `requirements.md` Generation (ChatGPT):**
+    *   **User Prompt:**
+        ```
+        You are the best android developer in the world. The pdf provided is the assignment that I need to complete in order to get a job. Use the pdf and provide a requirements.md file that I can copy and paste
+        ```
+    *   **Effectiveness:** This prompt (used with ChatGPT) laid the groundwork for the project by generating the initial requirements document based on an external PDF.
+
+2.  **Project Initialization and Task Planning (Gemini):**
     *   **User Prompt:**
         ```
         You are the best android developer in the world. Go through the requirements.md file understand the project requirement and create a tasks.md accordingly. Then proceed building the project.
@@ -40,21 +47,21 @@ Below are a few examples of key prompts used during development. For a more comp
         ```
     *   **Effectiveness:** Set the stage for project structure and initial task breakdown by the in-IDE AI (Gemini).
 
-2.  **Refactoring with Common UI Components (Gemini):**
+3.  **Refactoring with Common UI Components (Gemini):**
     *   **Initial Prompt:**
-    ```
-      Let'''s create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
-      ```
+        ```
+        Let'''s create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+        ```
     *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
-3.  **Addressing API Level Compatibility for File Saving (`MediaStore`) (Gemini):**
+4.  **Addressing API Level Compatibility for File Saving (`MediaStore`) (Gemini):**
     *   **User Prompt (identifying issue):** 
-    ```
-    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`
-      ```
+        ```
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`
+        ```
     *   **Effectiveness:** Resulted in AI-generated code that correctly handles file saving to the Downloads directory across different Android versions.
 
-4.  **Reusable `ProgressButton` Creation (Gemini):**
+5.  **Reusable `ProgressButton` Creation (Gemini):**
     *   **User Prompt (summarized):** "Let'''s proceed with developing the `ProgressButton`... Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button."
     *   **Effectiveness:** AI-assisted creation of a reusable `ProgressButton` and its integration, improving UI feedback.
 
@@ -92,17 +99,6 @@ Below are a few examples of key prompts used during development. For a more comp
 
 [Link to your resume.pdf/resume.docx/resume.txt - To be added]
 
-## Setup & Build
-
-1.  Clone the repository:
-    ```bash
-    git clone [repository_url] # Replace with your actual repository URL
-    ```
-2.  Open the project in Android Studio (latest stable version recommended).
-3.  Ensure you have the necessary Android SDKs and build tools installed.
-4.  Sync Gradle files.
-5.  Build and run the application on an emulator or physical device.
-
 ## Technologies Used
 
 *   Kotlin
@@ -120,11 +116,4 @@ The application aims to follow Clean Architecture principles, separating concern
 *   **Domain Layer:** Contains use cases and business logic (currently partially implemented with use cases directly in ViewModels for some features).
 *   **Presentation Layer (UI):** Consists of Composable screens, ViewModels, and navigation.
 
-## Origin of requirements.md
-
-The `requirements.md` file was initially generated based on a PDF assignment, using ChatGPT with the following prompt:
-```
-
-You are the best android developer in the world. The pdf provided is the assignment that I need to complete in order to get a job. Use the pdf and provide a requirements.md file that I can copy and paste
-```
 ---
