@@ -21,17 +21,41 @@ import java.util.Calendar
 import java.util.EnumMap
 import javax.inject.Inject
 
+/**
+ * Defines the available options for grouping expenses in the list.
+ */
 enum class GroupByOption {
-    TIME, // Will now mean group by TimeOfDay (Morning, Afternoon, Evening)
+    /** Groups expenses by the time of day they occurred (Morning, Afternoon, Evening). */
+    TIME,
+    /** Groups expenses by their assigned category. */
     CATEGORY
 }
 
+/**
+ * Represents different parts of the day for grouping expenses.
+ */
 enum class TimeOfDay {
+    /** Represents the morning period (e.g., 12 AM - 11:59 AM). */
     MORNING,
+    /** Represents the afternoon period (e.g., 12 PM - 4:59 PM). */
     AFTERNOON,
+    /** Represents the evening period (e.g., 5 PM - 11:59 PM). */
     EVENING
 }
 
+/**
+ * Represents the UI state for the Expense List screen.
+ *
+ * @property expenses The list of expenses for the currently selected date.
+ * @property selectedDate The currently selected date in milliseconds.
+ * @property totalSpentForSelectedDate The total amount spent on the selected date. Null if no expenses.
+ * @property totalExpenseCountForSelectedDate The total number of expenses recorded for the selected date.
+ * @property isLoading True if data is currently being loaded, false otherwise.
+ * @property groupBy The current option selected for grouping expenses.
+ * @property errorMessage An optional error message to be displayed to the user.
+ * @property groupedExpenses A map of expenses grouped by [CategoryType], used when [groupBy] is [GroupByOption.CATEGORY].
+ * @property timeOfDayGroupedExpenses A map of expenses grouped by [TimeOfDay], used when [groupBy] is [GroupByOption.TIME].
+ */
 data class ExpenseListUiState(
     val expenses: List<Expense> = emptyList(),
     val selectedDate: Long = System.currentTimeMillis(),
@@ -41,14 +65,28 @@ data class ExpenseListUiState(
     val groupBy: GroupByOption = GroupByOption.TIME,
     val errorMessage: String? = null,
     val groupedExpenses: Map<CategoryType, List<Expense>> = emptyMap(),
-    // Changed from hourlyGroupedExpenses to timeOfDayGroupedExpenses
     val timeOfDayGroupedExpenses: Map<TimeOfDay, List<Expense>> = emptyMap()
 )
 
+/**
+ * Represents one-time events that can be emitted from the [ExpenseListViewModel] to the UI.
+ */
 sealed class ExpenseListEvent {
+    /**
+     * Event to request showing a toast message.
+     * @param message The message to be displayed in the toast.
+     */
     data class ShowToast(val message: String) : ExpenseListEvent()
 }
 
+/**
+ * ViewModel for the Expense List screen.
+ * Manages the UI state, handles user interactions, and fetches expense data.
+ *
+ * @param getExpensesByDateRangeUseCase Use case to fetch expenses within a date range.
+ * @param getDailyTotalUseCase Use case to calculate the total expenses for a day.
+ * @param deleteExpenseUseCase Use case to delete an expense.
+ */
 @HiltViewModel
 class ExpenseListViewModel @Inject constructor(
     private val getExpensesByDateRangeUseCase: GetExpensesByDateRangeUseCase,
@@ -57,15 +95,27 @@ class ExpenseListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseListUiState())
+    /**
+     * The current UI state of the Expense List screen, observed by the UI.
+     */
     val uiState: StateFlow<ExpenseListUiState> = _uiState.asStateFlow()
 
     private val _eventFlow = MutableSharedFlow<ExpenseListEvent>()
+    /**
+     * A flow of one-time events to be consumed by the UI (e.g., showing toasts).
+     */
     val eventFlow = _eventFlow.asSharedFlow()
 
     init {
         onDateSelected(System.currentTimeMillis())
     }
 
+    /**
+     * Handles the selection of a new date by the user.
+     * Updates the UI state with the new date and triggers loading of expenses for that date.
+     *
+     * @param newDateMillis The newly selected date in milliseconds since epoch.
+     */
     fun onDateSelected(newDateMillis: Long) {
         _uiState.update {
             it.copy(
@@ -77,10 +127,20 @@ class ExpenseListViewModel @Inject constructor(
         loadExpensesAndTotalForDate(newDateMillis)
     }
 
+    /**
+     * Refreshes the expense data for the currently selected date.
+     * Useful for pull-to-refresh or after an operation like deletion.
+     */
     fun refreshData() {
         loadExpensesAndTotalForDate(uiState.value.selectedDate)
     }
 
+    /**
+     * Determines the [TimeOfDay] (Morning, Afternoon, Evening) based on the hour of the given timestamp.
+     *
+     * @param timestamp The timestamp in milliseconds.
+     * @return The corresponding [TimeOfDay].
+     */
     private fun getTimeOfDay(timestamp: Long): TimeOfDay {
         val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
         return when (calendar.get(Calendar.HOUR_OF_DAY)) {
@@ -90,22 +150,31 @@ class ExpenseListViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Groups a list of expenses by [TimeOfDay].
+     * Ensures all [TimeOfDay] keys exist in the resulting map, even if they have no expenses.
+     *
+     * @param expenses The list of [Expense] objects to group.
+     * @return A map where keys are [TimeOfDay] and values are lists of corresponding expenses.
+     */
     private fun groupExpensesByTimeOfDay(expenses: List<Expense>): Map<TimeOfDay, List<Expense>> {
         val groupedMap = EnumMap<TimeOfDay, MutableList<Expense>>(TimeOfDay::class.java)
-        // Ensure all TimeOfDay keys exist for ordered display, even if empty
         TimeOfDay.values().forEach { tod -> groupedMap[tod] = mutableListOf() }
 
         expenses.forEach { expense ->
             val timeOfDay = getTimeOfDay(expense.date)
             groupedMap[timeOfDay]?.add(expense)
         }
-        // Filter out empty groups only if you don't want to show empty sections,
-        // but for consistent UI, it's often better to show the section header.
-        // For this implementation, we will keep all sections.
-        return groupedMap.mapValues { it.value.toList() } // Make lists immutable
+        return groupedMap.mapValues { it.value.toList() } 
     }
 
 
+    /**
+     * Loads expenses and the total spending for a specific date.
+     * Updates the UI state with loading indicators, fetched data, or error messages.
+     *
+     * @param dateMillis The specific date in milliseconds for which to load data.
+     */
     private fun loadExpensesAndTotalForDate(dateMillis: Long) {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
@@ -142,17 +211,18 @@ class ExpenseListViewModel @Inject constructor(
                             totalExpenseCountForSelectedDate = expenses.size,
                             timeOfDayGroupedExpenses = newTimeOfDayGroupedExpenses,
                             groupedExpenses = newCategoryGroupedExpenses
+                            // isLoading will be set to false by the other launch block
                         )
                     }
                 }
         }
 
         viewModelScope.launch {
-            getDailyTotalUseCase(dayStart)
+            getDailyTotalUseCase(dayStart) // Use dayStart for consistency as it represents the whole day
                 .catch { e ->
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
+                            isLoading = false, // Ensure loading stops even if only this call fails
                             errorMessage = (uiState.value.errorMessage ?: "") + "\nError fetching total: ${e.message}")
                     }
                 }
@@ -160,25 +230,31 @@ class ExpenseListViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             totalSpentForSelectedDate = total,
-                            isLoading = false
+                            isLoading = false // Final loading state update
                         )
                     }
                 }
         }
     }
 
+    /**
+     * Sets the grouping option for the expense list.
+     * Updates the UI state and re-groups the existing expenses according to the new option.
+     *
+     * @param newGroupBy The [GroupByOption] to apply.
+     */
     fun setGroupBy(newGroupBy: GroupByOption) {
         if (_uiState.value.groupBy != newGroupBy) {
             _uiState.update { currentState ->
                 val newTimeOfDayGroupedExpenses = if (newGroupBy == GroupByOption.TIME) {
                     groupExpensesByTimeOfDay(currentState.expenses)
                 } else {
-                    emptyMap()
+                    emptyMap() // Clear if not grouping by time
                 }
                 val newCategoryGroupedExpenses = if (newGroupBy == GroupByOption.CATEGORY) {
                     groupExpensesByCategory(currentState.expenses)
                 } else {
-                    emptyMap()
+                    emptyMap() // Clear if not grouping by category
                 }
                 currentState.copy(
                     groupBy = newGroupBy,
@@ -189,6 +265,14 @@ class ExpenseListViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Groups a list of expenses by their [CategoryType].
+     * Handles potential unknown categories by defaulting to a fallback (e.g., FOOD).
+     * The resulting map is sorted by category name.
+     *
+     * @param expenses The list of [Expense] objects to group.
+     * @return A map where keys are [CategoryType] and values are lists of corresponding expenses, sorted by category name.
+     */
     private fun groupExpensesByCategory(expenses: List<Expense>): Map<CategoryType, List<Expense>> {
         return expenses.groupBy { expense ->
             try {
@@ -198,15 +282,21 @@ class ExpenseListViewModel @Inject constructor(
                 println("Warning: Unknown category '${expense.category}' for expense ID ${expense.id}. Grouping under FOOD as fallback.")
                 CategoryType.FOOD // Fallback or a specific 'UNKNOWN' category
             }
-        }.toSortedMap(compareBy { it.name })
+        }.toSortedMap(compareBy { it.name }) // Sorts the map by category name (enum name)
     }
 
+    /**
+     * Deletes a given expense.
+     * Emits a toast message indicating success or failure and refreshes the expense list.
+     *
+     * @param expense The [Expense] object to be deleted.
+     */
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch {
             try {
                 deleteExpenseUseCase(expense)
                 _eventFlow.emit(ExpenseListEvent.ShowToast("Expense deleted successfully"))
-                refreshData()
+                refreshData() // Refresh data after deletion
             } catch (e: Exception) {
                 _eventFlow.emit(ExpenseListEvent.ShowToast("Failed to delete expense: ${e.message}"))
             }

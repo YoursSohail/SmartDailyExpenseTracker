@@ -279,7 +279,7 @@ private fun ExpenseEntryScreenContent(
                 maxLines = 3
             )
             if (uiState.notesError != null) {
-                Text(uiState.notesError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Text(uiState.notesError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {

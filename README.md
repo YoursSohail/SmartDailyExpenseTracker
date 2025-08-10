@@ -54,16 +54,33 @@ Below are a few examples of key prompts used during development. For a more comp
         ```
     *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
-4.  **Addressing API Level Compatibility for File Saving (`MediaStore`) (Gemini):**
-    *   **User Prompt (identifying issue):** 
+4.  **UI Layout Update in `ExpenseListScreen.kt` (Gemini):**
+    *   **User Prompt:**
         ```
-        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`
+        instead of showing total expense count in brackets show it below the totalSpentFormatted - "Total transactions - 3"
         ```
-    *   **Effectiveness:** Resulted in AI-generated code that correctly handles file saving to the Downloads directory across different Android versions.
+    *   **Effectiveness:** AI modified the Jetpack Compose layout in `ExpenseListScreen.kt` to display the transaction count on a new line with specific styling, directly addressing the user's request for improved UI clarity.
 
-5.  **Reusable `ProgressButton` Creation (Gemini):**
-    *   **User Prompt (summarized):** "Let'''s proceed with developing the `ProgressButton`... Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button."
-    *   **Effectiveness:** AI-assisted creation of a reusable `ProgressButton` and its integration, improving UI feedback.
+5.  **Component Refactoring and File Organization (Gemini):**
+    *   **User Prompt:**
+        ```
+        move ThemeSettingOption into a separate file and add its preview
+        ```
+    *   **Effectiveness:** AI successfully refactored the code by creating a new file (`SettingsComponents.kt`), moving the `ThemeSettingOption` composable and its associated previews into it, and ensuring the original screen (`SettingsScreen.kt`) correctly utilized the component from its new location. This improved code modularity and organization.
+
+6.  **Organizing Screen-Specific UI into `ExpenseListComponents.kt` (Gemini):**
+    *   **User Prompt:**
+        ```
+        For the `ExpenseListScreen`, let'''s improve its structure. Create a new file named `ExpenseListComponents.kt`. Move helper composables like `ListContent` and `AnimatedExpenseListItem` from `ExpenseListScreen.kt` into this new components file. Ensure `ExpenseListScreen.kt` now imports and uses them correctly.
+        ```
+    *   **Effectiveness:** This led to better organization of the `ExpenseListScreen`'s UI logic, separating the main screen structure from its more granular, list-related components, improving readability and maintainability.
+
+7.  **Batch KDoc Documentation for Use Cases (Gemini):**
+    *   **User Prompt:**
+        ```
+        add docstring to all the methods in different use case files
+        ```
+    *   **Effectiveness:** Efficiently applied documentation standards across multiple files in the domain layer based on a single, high-level request, saving significant manual effort and improving code maintainability.
 
 ## Checklist of Features Implemented
 
@@ -116,4 +133,11 @@ The application aims to follow Clean Architecture principles, separating concern
 *   **Domain Layer:** Contains use cases and business logic (currently partially implemented with use cases directly in ViewModels for some features).
 *   **Presentation Layer (UI):** Consists of Composable screens, ViewModels, and navigation.
 
+## Origin of requirements.md
+
+The `requirements.md` file was initially generated based on a PDF assignment, using ChatGPT with the following prompt:
+```
+
+You are the best android developer in the world. The pdf provided is the assignment that I need to complete in order to get a job. Use the pdf and provide a requirements.md file that I can copy and paste
+```
 ---

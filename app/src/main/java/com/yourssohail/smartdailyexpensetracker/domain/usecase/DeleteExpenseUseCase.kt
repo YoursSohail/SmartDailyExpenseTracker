@@ -4,9 +4,17 @@ import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository
 import javax.inject.Inject // Assuming DI
 
+/**
+ * Use case for deleting an expense.
+ */
 class DeleteExpenseUseCase @Inject constructor(
     private val expenseRepository: ExpenseRepository
 ) {
+    /**
+     * Deletes a given expense from the repository.
+     *
+     * @param expense The [Expense] object to be deleted.
+     */
     suspend operator fun invoke(expense: Expense) {
         expenseRepository.deleteExpense(expense)
     }

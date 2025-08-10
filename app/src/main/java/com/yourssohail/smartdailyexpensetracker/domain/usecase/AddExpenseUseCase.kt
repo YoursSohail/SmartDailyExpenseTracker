@@ -4,9 +4,20 @@ import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepository
 import javax.inject.Inject // Assuming DI
 
+/**
+ * Use case for adding a new expense.
+ * It performs basic validation before inserting the expense into the repository.
+ */
 class AddExpenseUseCase @Inject constructor(
     private val expenseRepository: ExpenseRepository
 ) {
+    /**
+     * Adds a new expense to the repository after performing basic validation.
+     *
+     * @param expense The [Expense] object to be added.
+     * @return The ID of the newly inserted expense.
+     * @throws IllegalArgumentException if the expense title is blank or the amount is not positive.
+     */
     suspend operator fun invoke(expense: Expense): Long {
         // Basic validation (can be expanded or moved to a dedicated ValidateExpenseUseCase later)
         if (expense.title.isBlank()) {

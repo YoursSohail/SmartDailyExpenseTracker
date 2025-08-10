@@ -10,8 +10,8 @@ data class Expense(
     val id: Long = 0,
     val title: String,
     val amount: Double,
-    val category: String, // We'll link this to CategoryType enum later
-    val date: Long = System.currentTimeMillis(), // Default to current time
+    val category: String,
+    val date: Long = System.currentTimeMillis(),
     val notes: String? = null,
     val receiptImagePath: String? = null
 )

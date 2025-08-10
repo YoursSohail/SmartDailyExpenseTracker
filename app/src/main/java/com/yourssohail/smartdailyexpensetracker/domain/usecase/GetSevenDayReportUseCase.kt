@@ -6,9 +6,18 @@ import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import javax.inject.Inject // Assuming DI
 
+/**
+ * Use case for retrieving expenses from the last 7 days, including today.
+ */
 class GetSevenDayReportUseCase @Inject constructor(
     private val expenseRepository: ExpenseRepository
 ) {
+    /**
+     * Retrieves a list of expenses from the repository for the last 7 days.
+     * This includes expenses from today and the 6 preceding days.
+     *
+     * @return A Flow emitting a list of [Expense] objects for the 7-day period.
+     */
     operator fun invoke(): Flow<List<Expense>> {
         val calendar = Calendar.getInstance()
 

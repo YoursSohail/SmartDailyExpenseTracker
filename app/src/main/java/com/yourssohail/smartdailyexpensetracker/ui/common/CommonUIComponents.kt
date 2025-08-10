@@ -32,6 +32,7 @@ fun FullScreenLoadingIndicator(modifier: Modifier = Modifier) {
     }
 }
 
+
 @Preview
 @Composable
 fun FullScreenLoadingIndicatorPreview() {
