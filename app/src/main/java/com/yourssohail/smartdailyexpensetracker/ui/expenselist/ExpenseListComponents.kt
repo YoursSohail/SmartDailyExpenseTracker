@@ -91,9 +91,9 @@ internal val DATE_FORMAT_SHORT_COMPONENTS = SimpleDateFormat("dd MMM yyyy", Loca
 @Composable
 private fun getTimeOfDayHeaderPresentation(timeOfDay: TimeOfDay): Pair<String, String> {
     return when (timeOfDay) {
-        TimeOfDay.MORNING -> "🌅" to "Morning"
-        TimeOfDay.AFTERNOON -> "☀️" to "Afternoon"
-        TimeOfDay.EVENING -> "🌙" to "Evening"
+        TimeOfDay.MORNING -> "🌅" to "Morning (12 AM - 11:59 AM)"
+        TimeOfDay.AFTERNOON -> "☀️" to "Afternoon (12 PM - 4:59 PM)"
+        TimeOfDay.EVENING -> "🌙" to "Evening (5 PM - 11:59 PM)"
     }
 }
 
@@ -234,7 +234,7 @@ internal fun ListContent(
                                                 modifier = Modifier.padding(end = 8.dp)
                                             )
                                             SectionTitle(
-                                                text = name,
+                                                text = "$name",
                                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
                                             )
                                         }
