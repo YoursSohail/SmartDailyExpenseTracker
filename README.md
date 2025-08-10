@@ -19,21 +19,21 @@ This project involved the use of multiple AI tools:
     *   **Screen Refactoring:** Systematically updated multiple screens (`ExpenseListComponents.kt`, `ExpenseListScreen.kt`, `ExpenseReportScreen.kt`, `ExpenseEntryScreen.kt`, `SettingsScreen.kt`) to incorporate the newly created common UI components, enhancing consistency and maintainability.
     *   **API Level Compatibility:** Addressed `MediaStore` API level errors by modifying ViewModel code (`ExpenseReportViewModel.kt`) to handle file saving to the Downloads directory correctly across different Android versions (API <29 and API 29+).
     *   **Navigation Consolidation:** Identified and refactored redundant navigation definitions by modifying `AppNavigation.kt` to use a centralized `Screen` sealed class and `bottomNavItems` from `AppDestinations.kt`.
-    *   **Documentation:** Assisted in creating and iteratively updating project documentation, including this `README.md` file and the `AI_LOG.md` file, which logs key prompts and interactions.
+    *   **Documentation:** Assisted in creating and iteratively updating project documentation, including this `README.md` file.
 
 ## Key Prompt Logs
 
-Below are a few examples of key prompts used during development. For a more comprehensive log of AI interactions, please see the `AI_LOG.md` file in the project root.
+Below are a few examples of key prompts used during development.
 
 1.  **Initial `requirements.md` Generation (ChatGPT):**
-    *   **User Prompt:**
+    *   **Prompt:**
         ```
         You are the best android developer in the world. The pdf provided is the assignment that I need to complete in order to get a job. Use the pdf and provide a requirements.md file that I can copy and paste
         ```
     *   **Effectiveness:** This prompt (used with ChatGPT) laid the groundwork for the project by generating the initial requirements document based on an external PDF.
 
 2.  **Project Initialization and Task Planning (Gemini):**
-    *   **User Prompt:**
+    *   **Prompt:**
         ```
         You are the best android developer in the world. Go through the requirements.md file understand the project requirement and create a tasks.md accordingly. Then proceed building the project.
 
@@ -48,29 +48,50 @@ Below are a few examples of key prompts used during development. For a more comp
     *   **Effectiveness:** Set the stage for project structure and initial task breakdown by the in-IDE AI (Gemini).
 
 3.  **Refactoring with Common UI Components (Gemini):**
-    *   **Initial Prompt:**
+    *   **Prompt:**
         ```
-        Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+        Let's create a new file at `CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
         ```
     *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
 
-4. **Organizing Screen-Specific UI into `ExpenseListComponents.kt` (Gemini):**
-    *   **User Prompt:**
+4.  **Organizing Screen-Specific UI into `ExpenseListComponents.kt` (Gemini):**
+    *   **Prompt:**
         ```
         For the `ExpenseListScreen`, let's improve its structure. Create a new file named `ExpenseListComponents.kt`. Move helper composables like `ListContent` and `AnimatedExpenseListItem` from `ExpenseListScreen.kt` into this new components file. Ensure `ExpenseListScreen.kt` now imports and uses them correctly.
         ```
     *   **Effectiveness:** This led to better organization of the `ExpenseListScreen`'s UI logic, separating the main screen structure from its more granular, list-related components, improving readability and maintainability.
 
-5. **Batch KDoc Documentation for Use Cases (Gemini):**
-    *   **User Prompt:**
+5.  **Batch KDoc Documentation (Gemini):**
+    *   **Initial Prompt:**
         ```
         Add docstring to all the methods for:
         - Use case files
         - Repository files
         - ViewModel files
         ```
-    *   **Effectiveness:** Efficiently applied documentation standards across multiple files in the domain layer based on a single, high-level request, saving significant manual effort and improving code maintainability.
+    *   **Retry Prompt:**
+        ```
+        Thanks for adding the KDocs. For the Use Case files, could you make the descriptions more specific about what each use case *does* and what its parameters represent? For example, instead of just saying "Executes the use case", for a use case like `GetExpenseByIdUseCase(id: Long)`, the KDoc should explain that it "Retrieves a specific expense by its unique identifier" and that `id` is "the unique ID of the expense to retrieve". Please apply similar descriptive detail to other use cases and their parameters.
+        ```
+    *   **Effectiveness:** Efficiently applied documentation standards across multiple files. With a follow-up prompt, the KDocs were refined to be more descriptive and context-specific, significantly improving code maintainability and understanding.
+
+6.  **Refactoring Utility Functions (e.g., Formatters) (Gemini):**
+    *   **Initial Prompt:**
+        ```
+        I have a date formatting function \`fun formatDateForDisplay(timestamp: Long): String\` and a currency formatting function \`val indianCurrencyFormat: NumberFormat\` currently in \`ExpenseListViewModel.kt\`.
+
+        Please perform the following:
+        1. Create a new Kotlin file named \`Formatters.kt\` in the package \`com.yourssohail.smartdailyexpensetracker.utils\`.
+        2. Move both \`formatDateForDisplay\` and \`indianCurrencyFormat\` from \`ExpenseListViewModel.kt\` into this new \`Formatters.kt\` file.
+        3. Ensure they are public (or internal, accessible throughout the module).
+        4. Update \`ExpenseListViewModel.kt\` to correctly import and use these formatters from their new location.
+        ```
+    *   **Retry Prompt:**
+        ```
+        Thanks for moving the formatters to \`utils/Formatters.kt\`. However, \`ExpenseListViewModel.kt\` is now showing errors. Could you please ensure it imports them correctly from \`com.yourssohail.smartdailyexpensetracker.utils.FormattersKt\`? Also, please make \`formatDateForDisplay\` \`internal\` or \`public\` so it's accessible.
+        ```
+    *   **Effectiveness:** Showcased AI's ability to perform specific refactoring tasks like moving code to a new file and updating import statements, with iterative refinement for correctness (e.g., ensuring proper imports and visibility modifiers after the move).
 
 ## Checklist of Features Implemented
 
@@ -96,7 +117,7 @@ Below are a few examples of key prompts used during development. For a more comp
 
 ## APK Download Link
 
-[Download Expense Buddy APK]()
+[Download Expense Buddy APK](https://drive.google.com/file/d/17RKqPzJRXStd5cKGgALrmu7qY0XIUsL3/view?usp=sharing)
 
 ## Screenshots
 
@@ -139,7 +160,22 @@ Below are a few examples of key prompts used during development. For a more comp
 
 ## Architecture
 
-The application aims to follow Clean Architecture principles, separating concerns into:
-*   **Data Layer:** Handles data sources (Room database, preferences DataStore) and repositories.
-*   **Domain Layer:** Contains use cases and business logic (currently partially implemented with use cases directly in ViewModels for some features).
-*   **Presentation Layer (UI):** Consists of Composable screens, ViewModels, and navigation.
+The application is structured following Clean Architecture principles to promote separation of concerns, testability, and maintainability. The main layers are:
+
+*   **Presentation Layer (UI):**
+    *   Responsible for displaying the application's user interface and handling user interactions.
+    *   Comprises Jetpack Compose screens and UI elements.
+    *   ViewModels in this layer prepare and manage UI-related data, reacting to user input and interacting with the Domain layer (typically via Use Cases) to fetch or modify data.
+    *   Handles navigation between screens.
+
+*   **Domain Layer:**
+    *   Contains the core business logic and rules of the application. This layer is independent of the UI and Data layers.
+    *   Includes Use Cases (Interactors) that encapsulate specific pieces of business logic (e.g., `AddExpenseUseCase`, `GetExpensesUseCase`).
+    *   Defines pure Kotlin data models (Entities) representing the core business objects.
+    *   Specifies Repository interfaces that define the contracts for data operations, which are then implemented by the Data layer.
+
+*   **Data Layer:**
+    *   Responsible for providing the application with data from various sources and managing data persistence.
+    *   Implements the Repository interfaces defined in the Domain layer.
+    *   Contains data sources like the Room local database (for expenses) and Jetpack DataStore (for user preferences).
+    *   Includes mappers to convert between data models (e.g., Room entities) and domain models.

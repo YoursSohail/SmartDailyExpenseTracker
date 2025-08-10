@@ -22,7 +22,8 @@ fun formatDate(timestamp: Long, pattern: String, locale: Locale = Locale.getDefa
  * Currency formatter for Indian Rupees (INR).
  * Example: ₹1,234.56
  */
-internal val CURRENCY_FORMATTER_INR: NumberFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+internal val CURRENCY_FORMATTER_INR: NumberFormat =
+    NumberFormat.getCurrencyInstance(Locale.Builder().setLanguage("en").setRegion("IN").build())
 
 
 object DatePatterns {
