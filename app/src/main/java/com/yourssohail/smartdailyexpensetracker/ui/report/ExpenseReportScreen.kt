@@ -69,8 +69,6 @@ fun ExpenseReportScreen(
                     val shareIntent = Intent.createChooser(sendIntent, null)
                     context.startActivity(shareIntent)
                 }
-                // RequestCsvExport and RequestPdfExport are no longer handled here
-                // The ViewModel directly handles the export and emits ShowToast
             }
         }
     }
@@ -78,10 +76,10 @@ fun ExpenseReportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Expense Report") }, // TODO: Use stringResource
+                title = { Text("Expense Report") },
                 actions = {
                     IconButton(onClick = viewModel::onShareReportClicked) {
-                        Icon(Icons.Default.Share, contentDescription = "Share Report") // TODO: Use stringResource
+                        Icon(Icons.Default.Share, contentDescription = "Share Report")
                     }
                 }
             )
@@ -101,7 +99,7 @@ fun ExpenseReportScreen(
                 }
                 uiState.expensesOverLast7Days.isEmpty() && !viewModel.useDummyDataForReport -> {
                     Text(
-                        text = "No expenses recorded in the last 7 days to generate a report.", // TODO: Use stringResource
+                        text = "No expenses recorded in the last 7 days to generate a report.",
                         modifier = Modifier.align(Alignment.Center).padding(16.dp)
                     )
                 }
@@ -113,7 +111,7 @@ fun ExpenseReportScreen(
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text("Daily Spending Chart (Last 7 Days)", style = MaterialTheme.typography.titleMedium) // TODO: Use stringResource
+                        Text("Daily Spending Chart (Last 7 Days)", style = MaterialTheme.typography.titleMedium)
 
                         if (uiState.dailyTotals.isNotEmpty()) {
                             val primaryColor = MaterialTheme.colorScheme.primary
@@ -125,7 +123,7 @@ fun ExpenseReportScreen(
                                         label = dailyTotal.formattedDate, 
                                         values = listOf(
                                             Bars.Data(
-                                                label = "Expense", // TODO: Use stringResource
+                                                label = "Expense",
                                                 value = dailyTotal.totalAmount,
                                                 color = Brush.verticalGradient(
                                                     colors = listOf(primaryColor, primaryColorWithAlpha)
@@ -138,12 +136,12 @@ fun ExpenseReportScreen(
                             DailyExpenseChartCard(columnChartData = columnChartData)
 
                         } else {
-                            Text("Not enough data for chart.", style = MaterialTheme.typography.bodySmall) // TODO: Use stringResource
+                            Text("Not enough data for chart.", style = MaterialTheme.typography.bodySmall)
                         }
                         val totalFormatted = currencyFormatter.format(uiState.totalForAllCategories)
-                        ReportSectionCard(title = "Daily Totals") { // TODO: Use stringResource
+                        ReportSectionCard(title = "Daily Totals") {
                             if (uiState.dailyTotals.isEmpty()){
-                                Text("No daily totals to display.", style = MaterialTheme.typography.bodySmall) // TODO: Use stringResource
+                                Text("No daily totals to display.", style = MaterialTheme.typography.bodySmall)
                             } else {
                                 uiState.dailyTotals.forEach { daily ->
                                     Row(
@@ -158,9 +156,9 @@ fun ExpenseReportScreen(
                             }
                         }
 
-                        ReportSectionCard(title = "Category Totals (Total: $totalFormatted)") { // TODO: Use stringResource
+                        ReportSectionCard(title = "Category Totals (Total: $totalFormatted)") {
                             if (uiState.categoryTotals.isEmpty()){
-                                 Text("No expenses with categories found.", style = MaterialTheme.typography.bodySmall) // TODO: Use stringResource
+                                 Text("No expenses with categories found.", style = MaterialTheme.typography.bodySmall)
                             } else {
                                 uiState.categoryTotals.forEach { categoryTotal ->
                                     Row(

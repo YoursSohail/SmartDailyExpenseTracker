@@ -67,7 +67,6 @@ fun DailyExpenseChartCard(
                 .height(300.dp)
                 .padding(16.dp)
         ) {
-            // TODO: Use stringResource
             Text(
                 text = "Daily Expenses", 
                 style = MaterialTheme.typography.titleMedium,
