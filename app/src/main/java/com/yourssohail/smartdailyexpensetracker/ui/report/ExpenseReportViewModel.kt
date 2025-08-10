@@ -1,11 +1,22 @@
 package com.yourssohail.smartdailyexpensetracker.ui.report
 
+import android.app.Application
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Paint
+import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetSevenDayReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +25,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.io.OutputStream
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -23,8 +38,38 @@ import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
+// PdfConstants moved here from the Screen
+private object PdfConstants {
+    const val A4_PAGE_HEIGHT = 842
+    const val A4_PAGE_WIDTH = 595
+    const val DEFAULT_MARGIN_FLOAT = 40f
+    const val LINE_SPACING_FLOAT = 18f
+    const val SECTION_SPACING_FLOAT = 28f
+    const val TITLE_TEXT_SIZE_FLOAT = 18f
+    const val HEADER_TEXT_SIZE_FLOAT = 14f
+    const val BODY_TEXT_SIZE_FLOAT = 12f
+
+    fun titlePaint(): Paint = Paint().apply {
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        textSize = TITLE_TEXT_SIZE_FLOAT
+        color = android.graphics.Color.BLACK
+    }
+
+    fun headerPaint(): Paint = Paint().apply {
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        textSize = HEADER_TEXT_SIZE_FLOAT
+        color = android.graphics.Color.BLACK
+    }
+
+    fun bodyPaint(): Paint = Paint().apply {
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        textSize = BODY_TEXT_SIZE_FLOAT
+        color = android.graphics.Color.BLACK
+    }
+}
+
 data class DailyTotal(
-    val date: Long, // Timestamp for the start of the day
+    val date: Long,
     val formattedDate: String,
     val totalAmount: Double
 )
@@ -32,7 +77,7 @@ data class DailyTotal(
 data class CategoryTotal(
     val category: CategoryType,
     val totalAmount: Double,
-    val percentage: Float // Percentage of total expenses for the period
+    val percentage: Float
 )
 
 data class ExpenseReportUiState(
@@ -44,18 +89,16 @@ data class ExpenseReportUiState(
     val errorMessage: String? = null
 )
 
+// Simplified ReportEvent - file operations are now handled within ViewModel
 sealed class ReportEvent {
     data class ShowToast(val message: String) : ReportEvent()
     data class ShareReport(val summary: String) : ReportEvent()
-    data class RequestCsvExport(val fileName: String, val csvContent: String) : ReportEvent()
-    // New event for PDF export, passing the current UI state for report data
-    data class RequestPdfExport(val fileName: String, val reportData: ExpenseReportUiState) : ReportEvent()
 }
-
 
 @HiltViewModel
 class ExpenseReportViewModel @Inject constructor(
-    private val getSevenDayReportUseCase: GetSevenDayReportUseCase
+    private val getSevenDayReportUseCase: GetSevenDayReportUseCase,
+    @ApplicationContext private val applicationContext: Context // Injected Application Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpenseReportUiState())
@@ -66,10 +109,9 @@ class ExpenseReportViewModel @Inject constructor(
 
     private val reportDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     private val fileTimestampFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-    private val shortDateFormat = SimpleDateFormat("dd/MM", Locale.getDefault()) // Changed format here
+    private val shortDateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
+    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN")) // For PDF
 
-
-    // Flag to control dummy data. Set to true to always show dummy data for reports.
     var useDummyDataForReport = true
 
     init {
@@ -81,8 +123,8 @@ class ExpenseReportViewModel @Inject constructor(
         val calendar = Calendar.getInstance()
         val categories = CategoryType.entries
 
-        for (i in 6 downTo 0) { // Last 7 days, including today
-            calendar.time = Date() // Reset to today
+        for (i in 6 downTo 0) { 
+            calendar.time = Date() 
             calendar.add(Calendar.DAY_OF_YEAR, -i)
             val currentDayMillis = calendar.timeInMillis
 
@@ -92,7 +134,7 @@ class ExpenseReportViewModel @Inject constructor(
                 val randomAmount = Random.nextDouble(50.0, 500.0)
                 val expense = Expense(
                     id = Random.nextLong(),
-                    title = "Dummy Expense ${7-i}-${j+1} (${randomCategory.name.lowercase().replaceFirstChar { it.titlecase(Locale.ROOT) }})",
+                    title = "Dummy Expense ${7-i}-${j+1} (${randomCategory.name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }})",
                     amount = randomAmount,
                     category = randomCategory.name,
                     date = currentDayMillis - Random.nextInt(0, 1000 * 60 * 60 * 12),
@@ -106,7 +148,6 @@ class ExpenseReportViewModel @Inject constructor(
          dummyExpenses.add(Expense(Random.nextLong(), "Taxi Today", 300.0, CategoryType.TRAVEL.name, calendar.timeInMillis - TimeUnit.HOURS.toMillis(1), "Client visit"))
         return dummyExpenses.sortedByDescending { it.date }
     }
-
 
     fun loadReportData() {
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -201,61 +242,173 @@ class ExpenseReportViewModel @Inject constructor(
     private fun generateReportSummaryText(): String {
         val state = uiState.value
         val sb = StringBuilder()
-        sb.append("Expense Report (Last 7 Days):\n\n")
+        sb.append("Expense Report (Last 7 Days):\n\n") // TODO: Use string resources
         sb.append("Daily Totals:\n")
         state.dailyTotals.forEach {
-            sb.append("- ${it.formattedDate}: ₹${String.format("%.2f", it.totalAmount)}\n")
+            sb.append("- ${it.formattedDate}: ${currencyFormatter.format(it.totalAmount)}\n")
         }
         sb.append("\n")
-        sb.append("Category Totals (Total: ₹${String.format("%.2f", state.totalForAllCategories)}):\n")
+        val totalAllCategoriesFormatted = currencyFormatter.format(state.totalForAllCategories)
+        sb.append("Category Totals (Total: $totalAllCategoriesFormatted):\n")
         state.categoryTotals.forEach {
-            sb.append("- ${it.category.name.lowercase().replaceFirstChar { cat -> cat.titlecase(Locale.ROOT) }}: ₹${String.format("%.2f", it.totalAmount)} (${it.percentage.roundToInt()}%)\n")
+             val categoryName = it.category.name.replaceFirstChar { char -> 
+                if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() 
+            }
+            sb.append("- $categoryName: ${currencyFormatter.format(it.totalAmount)} (${it.percentage.roundToInt()}%)\n")
         }
-        sb.append("\nGenerated by Smart Daily Expense Tracker")
+        sb.append("\nGenerated by Smart Daily Expense Tracker") // TODO: Use string resource
         return sb.toString()
     }
 
     private fun generateCsvContent(expenses: List<Expense>): String {
         val csvBuilder = StringBuilder()
-        // Header Row
         csvBuilder.appendLine("\"ID\",\"Date\",\"Title\",\"Amount\",\"Category\",\"Notes\"")
-
-        // Data Rows
         expenses.forEach { expense ->
             val dateString = reportDateFormat.format(Date(expense.date))
-            val title = expense.title.replace("\"", "\"\"") // Escape double quotes
-            val notes = expense.notes?.replace("\"", "\"\"") ?: "" // Escape double quotes, handle null
+            val title = expense.title.replace("\"", "\"\"") 
+            val notes = expense.notes?.replace("\"", "\"\"") ?: ""
             csvBuilder.appendLine("\"${expense.id}\",\"$dateString\",\"$title\",\"${expense.amount}\",\"${expense.category}\",\"$notes\"")
         }
         return csvBuilder.toString()
     }
 
-    fun onExportPdfClicked() {
-        viewModelScope.launch {
-            val reportData = uiState.value
-            if (reportData.expensesOverLast7Days.isEmpty() && !useDummyDataForReport) { // Check if there's actual data if not using dummies
-                _eventFlow.emit(ReportEvent.ShowToast("No data to export for PDF."))
-                return@launch
-            }
-            val timestamp = fileTimestampFormat.format(Date())
-            val fileName = "ExpenseReport_Last7Days_$timestamp.pdf"
-            _eventFlow.emit(ReportEvent.RequestPdfExport(fileName, reportData))
-        }
-    }
-
     fun onExportCsvClicked() {
         viewModelScope.launch {
             val expensesToExport = uiState.value.expensesOverLast7Days
-            if (expensesToExport.isEmpty()) {
-                _eventFlow.emit(ReportEvent.ShowToast("No data to export for CSV."))
+            if (expensesToExport.isEmpty() && !useDummyDataForReport) {
+                _eventFlow.emit(ReportEvent.ShowToast("No data to export for CSV.")) // TODO: Use stringResource
                 return@launch
             }
-
             val csvContent = generateCsvContent(expensesToExport)
             val timestamp = fileTimestampFormat.format(Date())
             val fileName = "ExpenseReport_Last7Days_$timestamp.csv"
 
-            _eventFlow.emit(ReportEvent.RequestCsvExport(fileName, csvContent))
+            saveCsvFile(fileName, csvContent).onSuccess {
+                _eventFlow.emit(ReportEvent.ShowToast("CSV saved to Downloads")) // TODO: Use stringResource
+            }.onFailure { exception ->
+                _eventFlow.emit(ReportEvent.ShowToast("Failed to save CSV: ${exception.localizedMessage ?: "Unknown error"}")) // TODO: Use stringResource
+            }
+        }
+    }
+
+    fun onExportPdfClicked() {
+        viewModelScope.launch {
+            val reportData = uiState.value
+            if (reportData.expensesOverLast7Days.isEmpty() && !useDummyDataForReport) {
+                _eventFlow.emit(ReportEvent.ShowToast("No data to export for PDF.")) // TODO: Use stringResource
+                return@launch
+            }
+            val timestamp = fileTimestampFormat.format(Date())
+            val fileName = "ExpenseReport_Last7Days_$timestamp.pdf"
+            
+            generateAndSavePdfReport(fileName, reportData).onSuccess {
+                _eventFlow.emit(ReportEvent.ShowToast("PDF saved to Downloads")) // TODO: Use stringResource
+            }.onFailure { exception ->
+                _eventFlow.emit(ReportEvent.ShowToast("Failed to save PDF: ${exception.localizedMessage ?: "Unknown error"}")) // TODO: Use stringResource
+            }
+        }
+    }
+
+    private suspend fun saveCsvFile(fileName: String, csvContent: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                }
+                val resolver = applicationContext.contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+                uri?.let { fileUri ->
+                    resolver.openOutputStream(fileUri).use { outputStream: OutputStream? ->
+                        outputStream?.bufferedWriter()?.use { writer ->
+                            writer.write(csvContent)
+                        } ?: return@withContext Result.failure(IOException("Failed to open output stream."))
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        contentValues.clear()
+                        contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        resolver.update(fileUri, contentValues, null, null)
+                    }
+                    Result.success(Unit)
+                } ?: Result.failure(IOException("Failed to create MediaStore entry for CSV."))
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    private suspend fun generateAndSavePdfReport(fileName: String, reportData: ExpenseReportUiState): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            val pdfDocument = PdfDocument()
+            try {
+                val pageInfo = PdfDocument.PageInfo.Builder(PdfConstants.A4_PAGE_WIDTH, PdfConstants.A4_PAGE_HEIGHT, 1).create()
+                val page = pdfDocument.startPage(pageInfo)
+                val canvas = page.canvas
+
+                val titlePaint = PdfConstants.titlePaint()
+                val headerPaint = PdfConstants.headerPaint()
+                val bodyPaint = PdfConstants.bodyPaint()
+                // currencyFormatter is now a class member
+
+                var yPosition = PdfConstants.DEFAULT_MARGIN_FLOAT
+                val xMargin = PdfConstants.DEFAULT_MARGIN_FLOAT
+
+                canvas.drawText("Expense Report - Last 7 Days", xMargin, yPosition, titlePaint) // TODO: Use stringResource
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT * 1.5f
+
+                canvas.drawText("Daily Totals:", xMargin, yPosition, headerPaint) // TODO: Use stringResource
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT
+                reportData.dailyTotals.forEach {
+                    canvas.drawText("${it.formattedDate}: ${currencyFormatter.format(it.totalAmount)}", xMargin, yPosition, bodyPaint)
+                    yPosition += PdfConstants.LINE_SPACING_FLOAT
+                }
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT
+                
+                val totalAllCategoriesFormatted = currencyFormatter.format(reportData.totalForAllCategories)
+                canvas.drawText("Category Totals (Total: $totalAllCategoriesFormatted):", xMargin, yPosition, headerPaint) // TODO: Use stringResource
+                yPosition += PdfConstants.SECTION_SPACING_FLOAT
+                reportData.categoryTotals.forEach {
+                    val categoryName = it.category.name.replaceFirstChar { char ->
+                        if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString()
+                    }
+                    canvas.drawText("$categoryName (${it.percentage.roundToInt()}%): ${currencyFormatter.format(it.totalAmount)}", xMargin, yPosition, bodyPaint)
+                    yPosition += PdfConstants.LINE_SPACING_FLOAT
+                }
+                pdfDocument.finishPage(page)
+
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                        put(MediaStore.MediaColumns.IS_PENDING, 1)
+                    }
+                }
+                val resolver = applicationContext.contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+                uri?.let {
+                    resolver.openOutputStream(it).use { outputStream ->
+                        if (outputStream == null) return@withContext Result.failure(IOException("Failed to open output stream for PDF."))
+                        pdfDocument.writeTo(outputStream)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        contentValues.clear()
+                        contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        resolver.update(it, contentValues, null, null)
+                    }
+                    Result.success(Unit)
+                } ?: Result.failure(IOException("Failed to create MediaStore entry for PDF."))
+            } catch (e: Exception) {
+                Result.failure(e)
+            } finally {
+                pdfDocument.close()
+            }
         }
     }
 }
