@@ -43,7 +43,7 @@ Below are a few examples of key prompts used during development. For a more comp
 2.  **Refactoring with Common UI Components (Gemini):**
     *   **Initial Prompt:**
     ```
-      Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+      Let'''s create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
       ```
     *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
@@ -55,7 +55,7 @@ Below are a few examples of key prompts used during development. For a more comp
     *   **Effectiveness:** Resulted in AI-generated code that correctly handles file saving to the Downloads directory across different Android versions.
 
 4.  **Reusable `ProgressButton` Creation (Gemini):**
-    *   **User Prompt (summarized):** "Let's proceed with developing the `ProgressButton`... Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button."
+    *   **User Prompt (summarized):** "Let'''s proceed with developing the `ProgressButton`... Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button."
     *   **Effectiveness:** AI-assisted creation of a reusable `ProgressButton` and its integration, improving UI feedback.
 
 ## Checklist of Features Implemented
@@ -119,3 +119,12 @@ The application aims to follow Clean Architecture principles, separating concern
 *   **Data Layer:** Handles data sources (Room database, preferences DataStore) and repositories.
 *   **Domain Layer:** Contains use cases and business logic (currently partially implemented with use cases directly in ViewModels for some features).
 *   **Presentation Layer (UI):** Consists of Composable screens, ViewModels, and navigation.
+
+## Origin of requirements.md
+
+The `requirements.md` file was initially generated based on a PDF assignment, using ChatGPT with the following prompt:
+```
+
+You are the best android developer in the world. The pdf provided is the assignment that I need to complete in order to get a job. Use the pdf and provide a requirements.md file that I can copy and paste
+```
+---
