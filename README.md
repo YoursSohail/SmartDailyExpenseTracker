@@ -8,37 +8,45 @@ Expense Buddy is an Android application built with Jetpack Compose that helps us
 
 ## AI Usage Summary
 
-This project utilized an AI assistant for a variety of development tasks throughout the session:
-*   **Initial Project Planning:** Interpreted project requirements from `requirements.md` to generate an initial `tasks.md`, outlining architectural choices (MVVM, Clean Architecture), screen structure, and key features.
-*   **Common UI Component Creation:** Generated boilerplate and core logic for reusable UI elements like `FullScreenLoadingIndicator`, `ScreenErrorMessage`, `EmptyStateView`, and `SectionTitle` in `CommonUIComponents.kt`.
-*   **Screen Refactoring:** Systematically updated multiple screens (`ExpenseListComponents.kt`, `ExpenseListScreen.kt`, `ExpenseReportScreen.kt`, `ExpenseEntryScreen.kt`, `SettingsScreen.kt`) to incorporate the newly created common UI components, enhancing consistency and maintainability.
-*   **API Level Compatibility:** Addressed `MediaStore` API level errors by modifying ViewModel code (`ExpenseReportViewModel.kt`) to handle file saving to the Downloads directory correctly across different Android versions (API <29 and API 29+).
-*   **Navigation Consolidation:** Identified and refactored redundant navigation definitions by modifying `AppNavigation.kt` to use a centralized `Screen` sealed class and `bottomNavItems` from `AppDestinations.kt`.
-*   **Documentation:** Assisted in creating and iteratively updating project documentation, including this `README.md` file and the `AI_LOG.md` file, which logs key prompts and interactions.
+This project involved the use of multiple AI tools:
+
+*   **ChatGPT** was utilized for:
+    *   Initial brainstorming and generation of the `requirements.md` file.
+    *   Assistance in the app logo creation process.
+*   The **Gemini AI assistant**, integrated within Android Studio, was then used for a variety of subsequent development tasks throughout the session:
+    *   **Initial Project Planning:** Interpreting the AI-generated `requirements.md` to create a detailed `tasks.md`, outlining architectural choices (MVVM, Clean Architecture), screen structure, and key features.
+    *   **Common UI Component Creation:** Generating boilerplate and core logic for reusable UI elements like `FullScreenLoadingIndicator`, `ScreenErrorMessage`, `EmptyStateView`, and `SectionTitle` in `CommonUIComponents.kt`.
+    *   **Screen Refactoring:** Systematically updated multiple screens (`ExpenseListComponents.kt`, `ExpenseListScreen.kt`, `ExpenseReportScreen.kt`, `ExpenseEntryScreen.kt`, `SettingsScreen.kt`) to incorporate the newly created common UI components, enhancing consistency and maintainability.
+    *   **API Level Compatibility:** Addressed `MediaStore` API level errors by modifying ViewModel code (`ExpenseReportViewModel.kt`) to handle file saving to the Downloads directory correctly across different Android versions (API <29 and API 29+).
+    *   **Navigation Consolidation:** Identified and refactored redundant navigation definitions by modifying `AppNavigation.kt` to use a centralized `Screen` sealed class and `bottomNavItems` from `AppDestinations.kt`.
+    *   **Documentation:** Assisted in creating and iteratively updating project documentation, including this `README.md` file and the `AI_LOG.md` file, which logs key prompts and interactions.
 
 ## Key Prompt Logs
 
 Below are a few examples of key prompts used during development. For a more comprehensive log of AI interactions, please see the `AI_LOG.md` file in the project root.
 
-1.  **Project Initialization and Task Planning:**
-    *   **User Prompt:** "You are the best android developer in the world. Go through the requirements.md file understand the project requirement and create a tasks.md accordingly. Then proceed building the project.
+1.  **Project Initialization and Task Planning (Gemini):**
+    *   **User Prompt:**
+        ```
+        You are the best android developer in the world. Go through the requirements.md file understand the project requirement and create a tasks.md accordingly. Then proceed building the project.
 
-- Make sure to use MVVM and clean architecture for the project and make the UI look modern and elegant by using good color schemes.
+        - Make sure to use MVVM and clean architecture for the project and make the UI look modern and elegant by using good color schemes.
 
-- We will create three screens - Expenselist, expense report and settings, for the expense entry screen use fab in the expense list screen that opens up the entry screen
+        - We will create three screens - Expenselist, expense report and settings, for the expense entry screen use fab in the expense list screen that opens up the entry screen
 
-- Import all the reqruired dependecies even for the icons (if required) and for showing bar graphs and Room db
+        - Import all the reqruired dependecies even for the icons (if required) and for showing bar graphs and Room db
 
-update the tasks.md file accordingly"
-    *   **Effectiveness:** Set the stage for project structure and initial task breakdown.
+        update the tasks.md file accordingly
+        ```
+    *   **Effectiveness:** Set the stage for project structure and initial task breakdown by the in-IDE AI (Gemini).
 
-2.  **Refactoring with Common UI Components:**
-    *   **Initial Prompt:** "Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable..."
-    *   **Effectiveness:** Led to the creation of reusable UI elements and improved code maintainability across multiple screens.
+2.  **Refactoring with Common UI Components (Gemini):**
+    *   **Initial Prompt:** "Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+    *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
-3.  **Addressing API Level Compatibility for File Saving (`MediaStore`):**
+3.  **Addressing API Level Compatibility for File Saving (`MediaStore`) (Gemini):**
     *   **User Prompt (identifying issue):** "`val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`"
-    *   **Effectiveness:** Resulted in code that correctly handles file saving to the Downloads directory across different Android versions.
+    *   **Effectiveness:** Resulted in AI-generated code that correctly handles file saving to the Downloads directory across different Android versions.
 
 ## Checklist of Features Implemented
 
