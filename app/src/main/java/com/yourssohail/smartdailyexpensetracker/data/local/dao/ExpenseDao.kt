@@ -106,7 +106,7 @@ interface ExpenseDao {
      * @return A Flow emitting the first matching expense, or null if no such expense exists.
      */
 /* <<<<<<<<<<  ac493c23-add7-4d9e-b81f-67b1595dc6b1  >>>>>>>>>>> */
-    @Query("SELECT * FROM ex¯penses WHERE title = :title AND amount = :amount AND date BETWEEN :dateStart AND :dateEnd LIMIT 1")
+    @Query("SELECT * FROM expenses WHERE title = :title AND amount = :amount AND date BETWEEN :dateStart AND :dateEnd LIMIT 1")
     fun detectDuplicate(title: String, amount: Double, dateStart: Long, dateEnd: Long): Flow<Expense?>
 
 }
