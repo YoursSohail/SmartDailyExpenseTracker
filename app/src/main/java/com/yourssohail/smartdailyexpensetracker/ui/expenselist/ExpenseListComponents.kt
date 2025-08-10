@@ -30,8 +30,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.AccessTime
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -49,6 +52,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -73,6 +77,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
@@ -80,6 +85,7 @@ import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndic
 import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import java.io.File
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -87,6 +93,130 @@ import java.util.EnumMap
 import java.util.Locale
 
 internal val DATE_FORMAT_SHORT_COMPONENTS = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+private val DATE_FORMAT_FULL_DISPLAY = SimpleDateFormat("EEE, dd MMM yyyy, hh:mm a", Locale.getDefault())
+private val CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+
+
+@Composable
+fun ExpenseDetailDialog(
+    expense: Expense,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(expense.title, style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Amount
+                Text(
+                    text = CURRENCY_FORMATTER.format(expense.amount),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                // Category
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Category,
+                        contentDescription = "Category Icon",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Category: ${expense.category.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                // Date
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarToday,
+                        contentDescription = "Date Icon",
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Date: ${DATE_FORMAT_FULL_DISPLAY.format(Date(expense.date))}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                // Notes
+                if (expense.notes?.isNotBlank() == true) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(
+                            imageVector = Icons.Filled.Notes,
+                            contentDescription = "Notes Icon",
+                            modifier = Modifier.size(20.dp).padding(top = 2.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                           Text("Notes:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                           Text(
+                               text = expense.notes,
+                               style = MaterialTheme.typography.bodyLarge
+                           )
+                        }
+                    }
+                }
+
+                // Receipt Image
+                expense.receiptImagePath?.let { path ->
+                    if (path.isNotBlank()) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                        Text("Receipt:", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 4.dp))
+                        val imageBitmap = remember(path) {
+                            try {
+                                val file = File(path)
+                                if (file.exists()) {
+                                    BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
+                                } else { null }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+
+                        if (imageBitmap != null) {
+                            Image(
+                                bitmap = imageBitmap,
+                                contentDescription = "Receipt for ${expense.title}",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text(
+                                text = "Receipt image could not be loaded.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        modifier = Modifier.padding(vertical = 16.dp)
+    )
+}
+
 
 @Composable
 private fun getTimeOfDayHeaderPresentation(timeOfDay: TimeOfDay): Pair<String, String> {
@@ -138,14 +268,15 @@ internal fun AnimatedExpenseListItem(
     index: Int,
     onDeleteClick: (Expense) -> Unit,
     onEditClick: (Long) -> Unit,
-    isScrolling: Boolean, 
+    onItemClick: (Expense) -> Unit,
+    isScrolling: Boolean,
     modifier: Modifier = Modifier
 ) {
     var targetVisible by remember(expense.id) { mutableStateOf(false) }
     LaunchedEffect(key1 = expense.id, key2 = isScrolling) {
-        if (!targetVisible) { 
-            val delayMillis = if (isScrolling) 0L else index * 70L 
-            if (delayMillis > 0L) { 
+        if (!targetVisible) {
+            val delayMillis = if (isScrolling) 0L else index * 70L
+            if (delayMillis > 0L) {
                 kotlinx.coroutines.delay(delayMillis)
             }
             targetVisible = true
@@ -153,14 +284,14 @@ internal fun AnimatedExpenseListItem(
     }
 
     AnimatedVisibility(
-        visible = targetVisible, 
+        visible = targetVisible,
         enter = slideInHorizontally(
             initialOffsetX = { fullWidth -> fullWidth / 2 },
-            animationSpec = tween(durationMillis = if (isScrolling) 0 else 350) 
+            animationSpec = tween(durationMillis = if (isScrolling) 0 else 350)
         ),
         exit = slideOutHorizontally(
             targetOffsetX = { fullWidth -> fullWidth },
-            animationSpec = tween(durationMillis = 300) 
+            animationSpec = tween(durationMillis = 300)
         ),
         modifier = modifier
     ) {
@@ -168,6 +299,7 @@ internal fun AnimatedExpenseListItem(
             expense = expense,
             onDeleteClick = { onDeleteClick(expense) },
             onEditClick = { onEditClick(expense.id) },
+            onItemClick = onItemClick,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -180,7 +312,8 @@ internal fun ListContent(
     uiState: ExpenseListUiState,
     onDeleteExpense: (Expense) -> Unit,
     onNavigateToExpenseEdit: (expenseId: Long) -> Unit,
-    onRefresh: () -> Unit // Added for retry mechanism
+    onItemClick: (Expense) -> Unit,
+    onRefresh: () -> Unit
 ) {
     val listState = rememberLazyListState()
 
@@ -198,7 +331,7 @@ internal fun ListContent(
         }
         else -> {
             LazyColumn(
-                state = listState, 
+                state = listState,
                 modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
             ) {
@@ -212,12 +345,12 @@ internal fun ListContent(
                             )
                         }
                         itemsIndexed(uiState.expenses, key = { _, expense -> "fallback-time-${expense.id}" }) { index, expense ->
-                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, isScrolling = listState.isScrollInProgress)
+                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, onItemClick, isScrolling = listState.isScrollInProgress)
                         }
                     } else {
                         uiState.timeOfDayGroupedExpenses.forEach { (timeOfDay, expensesInTimeOfDay) ->
                              if (expensesInTimeOfDay.isNotEmpty()) {
-                                item { 
+                                item {
                                     Surface(
                                         modifier = Modifier.fillParentMaxWidth(),
                                         color = Color.Transparent,
@@ -242,11 +375,12 @@ internal fun ListContent(
                                 }
                                 itemsIndexed(expensesInTimeOfDay, key = { _, expense -> expense.id }) { index, expense ->
                                     AnimatedExpenseListItem(
-                                        expense = expense, 
-                                        index = index, 
-                                        onDeleteClick = onDeleteExpense, 
-                                        onEditClick = onNavigateToExpenseEdit, 
-                                        isScrolling = listState.isScrollInProgress, 
+                                        expense = expense,
+                                        index = index,
+                                        onDeleteClick = onDeleteExpense,
+                                        onEditClick = onNavigateToExpenseEdit,
+                                        onItemClick = onItemClick,
+                                        isScrolling = listState.isScrollInProgress,
                                         modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
                                     )
                                 }
@@ -263,12 +397,12 @@ internal fun ListContent(
                             )
                         }
                         itemsIndexed(uiState.expenses, key = { _, expense -> "fallback-category-${expense.id}" }) { index, expense ->
-                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, isScrolling = listState.isScrollInProgress)
+                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, onItemClick, isScrolling = listState.isScrollInProgress)
                         }
                     } else {
                         uiState.groupedExpenses.forEach { (category, expensesInCategory) ->
                              if (expensesInCategory.isNotEmpty()) {
-                                item { 
+                                item {
                                     Surface(
                                         modifier = Modifier.fillParentMaxWidth(),
                                         color = Color.Transparent,
@@ -297,11 +431,12 @@ internal fun ListContent(
                                 }
                                 itemsIndexed(expensesInCategory, key = { _, expense -> expense.id }) { index, expense ->
                                      AnimatedExpenseListItem(
-                                        expense = expense, 
-                                        index = index, 
-                                        onDeleteClick = onDeleteExpense, 
-                                        onEditClick = onNavigateToExpenseEdit, 
-                                        isScrolling = listState.isScrollInProgress, 
+                                        expense = expense,
+                                        index = index,
+                                        onDeleteClick = onDeleteExpense,
+                                        onEditClick = onNavigateToExpenseEdit,
+                                        onItemClick = onItemClick,
+                                        isScrolling = listState.isScrollInProgress,
                                         modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
                                     )
                                 }
@@ -395,16 +530,18 @@ fun CustomGroupToggleSwitch(
 fun ExpenseListItem(
     expense: Expense,
     onDeleteClick: (Expense) -> Unit,
-    onEditClick: (Expense) -> Unit, 
+    onEditClick: (Long) -> Unit,
+    onItemClick: (Expense) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var showOptionsMenu by remember { mutableStateOf(false) } 
+    var showOptionsMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 4.dp),
+            .padding(vertical = 6.dp, horizontal = 4.dp)
+            .clickable { onItemClick(expense) }, // Added clickable here
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -504,7 +641,8 @@ fun ExpenseListItem(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(150.dp)
-                                    .padding(vertical = 4.dp),
+                                    .padding(vertical = 4.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
                                 contentScale = ContentScale.Crop
                             )
                         } else {
@@ -542,7 +680,7 @@ fun ExpenseListItem(
                     DropdownMenuItem(
                         text = { Text("Edit") },
                         onClick = {
-                            onEditClick(expense)
+                            onEditClick(expense.id) // Changed to pass expense.id
                             showOptionsMenu = false
                         },
                         leadingIcon = {
@@ -588,6 +726,25 @@ fun ExpenseListItem(
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun ExpenseDetailDialogPreview() {
+    MaterialTheme {
+        ExpenseDetailDialog(
+            expense = Expense(
+                id = 1L,
+                title = "Detailed Conference Dinner",
+                amount = 125.75,
+                category = CategoryType.FOOD.name,
+                date = System.currentTimeMillis() - (2 * 86400000), // 2 days ago
+                notes = "This was a very long note about the conference dinner. It included several courses, discussions about future projects, and networking opportunities with key industry figures. The food was excellent, particularly the dessert which was a chocolate lava cake. The venue also had a great ambiance overlooking the city skyline.",
+                receiptImagePath = null // Add a dummy image path for full preview if possible, or test with null
+            ),
+            onDismiss = {}
+        )
+    }
+}
+
 @Preview
 @Composable
 fun ExpenseListItemPreview() {
@@ -602,7 +759,8 @@ fun ExpenseListItemPreview() {
     ExpenseListItem(
         expense = expense,
         onDeleteClick = {},
-        onEditClick = {} // Added for preview
+        onEditClick = {},
+        onItemClick = {}
     )
 }
 
@@ -639,17 +797,18 @@ fun CustomGroupToggleSwitchCategorySelectedPreview() {
 fun AnimatedExpenseListItemPreview() {
     AnimatedExpenseListItem(
         expense = Expense(id = 1, title = "Lunch Preview", amount = 12.75, category = CategoryType.FOOD.name, date = System.currentTimeMillis(), notes = "With colleagues"),
-        index = 0, 
-        onDeleteClick = {}, 
+        index = 0,
+        onDeleteClick = {},
         onEditClick = {},
-        isScrolling = false // Added for preview
+        onItemClick = {},
+        isScrolling = false
     )
 }
 
 @Preview(showBackground = true, name = "ListContent - Loading")
 @Composable
 fun ListContentLoadingPreview() {
-    ListContent(uiState = ExpenseListUiState(isLoading = true), onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {})
+    ListContent(uiState = ExpenseListUiState(isLoading = true), onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {})
 }
 
 @Preview(showBackground = true, name = "ListContent - Empty (Time Group)")
@@ -663,7 +822,7 @@ fun ListContentEmptyTimePreview() {
             isLoading = false,
             selectedDate = System.currentTimeMillis()
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {}
     )
 }
 
@@ -678,7 +837,7 @@ fun ListContentEmptyCategoryPreview() {
             isLoading = false,
             selectedDate = System.currentTimeMillis()
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {}
     )
 }
 
@@ -710,7 +869,7 @@ fun ListContentWithDataTimePreview() {
             totalExpenseCountForSelectedDate = allExpenses.size,
             totalSpentForSelectedDate = allExpenses.sumOf { it.amount }
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {}
     )
 }
 
@@ -738,7 +897,7 @@ fun ListContentWithDataCategoryPreview() {
             totalExpenseCountForSelectedDate = expensesList.size,
             totalSpentForSelectedDate = expensesList.sumOf { it.amount }
         ),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {}
     )
 }
 
@@ -747,7 +906,7 @@ fun ListContentWithDataCategoryPreview() {
 fun ListContentErrorPreview() {
     ListContent(
         uiState = ExpenseListUiState(isLoading = false, errorMessage = "Failed to load expenses. Please try again."),
-        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onRefresh = {}
+        onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {}
     )
 }
 

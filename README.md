@@ -82,6 +82,7 @@ Below are a few examples of key prompts used during development. For a more comp
     *   [x] Display expenses for a selected date.
     *   [x] Group expenses by category or time.
     *   [x] Edit or delete existing expenses.
+    *   [x] Tap on an expense to view its full details in a dialog.
 *   [x] **Reporting:**
     *   [x] View a 7-day spending chart.
     *   [x] See expense totals broken down by category.

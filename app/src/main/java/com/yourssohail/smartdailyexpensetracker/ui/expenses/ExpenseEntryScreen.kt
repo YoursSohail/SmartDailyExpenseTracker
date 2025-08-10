@@ -105,6 +105,7 @@ fun ExpenseEntryScreen(
                 is ExpenseEntryEvent.ShowToast -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
+
                 is ExpenseEntryEvent.ExpenseSaved -> {
                     onExpenseSaved()
                 }
@@ -194,7 +195,11 @@ private fun ExpenseEntryScreenContent(
                 modifier = Modifier.fillMaxWidth()
             )
             if (uiState.titleError != null) {
-                Text(uiState.titleError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    uiState.titleError!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             OutlinedTextField(
@@ -207,7 +212,11 @@ private fun ExpenseEntryScreenContent(
                 modifier = Modifier.fillMaxWidth()
             )
             if (uiState.amountError != null) {
-                Text(uiState.amountError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    uiState.amountError!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             var categoryExpanded by remember { mutableStateOf(false) }
@@ -243,7 +252,11 @@ private fun ExpenseEntryScreenContent(
                 }
             }
             if (uiState.categoryError != null) {
-                Text(uiState.categoryError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    uiState.categoryError!!,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             val calendar = Calendar.getInstance()
@@ -255,17 +268,23 @@ private fun ExpenseEntryScreenContent(
             val datePickerDialog = DatePickerDialog(
                 context,
                 { _, selectedYear, selectedMonth, selectedDayOfMonth ->
-                    val newCal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, selectedDayOfMonth) }
+                    val newCal = Calendar.getInstance()
+                        .apply { set(selectedYear, selectedMonth, selectedDayOfMonth) }
                     onDateChange(newCal.timeInMillis)
                 }, year, month, day
-            )
+            ).apply { datePicker.maxDate = System.currentTimeMillis() }
 
             OutlinedTextField(
                 value = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(uiState.date),
                 onValueChange = {},
                 label = { Text("Date") },
                 readOnly = true,
-                trailingIcon = { Icon(Icons.Default.DateRange, "Select Date", Modifier.clickable { datePickerDialog.show() }) },
+                trailingIcon = {
+                    Icon(
+                        Icons.Default.DateRange,
+                        "Select Date",
+                        Modifier.clickable { datePickerDialog.show() })
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -274,16 +293,25 @@ private fun ExpenseEntryScreenContent(
                 onValueChange = onNotesChange,
                 label = { Text("Optional Notes (max 100)") },
                 isError = uiState.notesError != null,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 80.dp),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 maxLines = 3
             )
             if (uiState.notesError != null) {
-                Text(uiState.notesError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    uiState.notesError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
 
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-                SectionTitle(text = "Receipt Image (Optional)", style = MaterialTheme.typography.labelLarge)
+                SectionTitle(
+                    text = "Receipt Image (Optional)",
+                    style = MaterialTheme.typography.labelLarge
+                )
                 Spacer(Modifier.height(8.dp))
 
                 if (uiState.selectedReceiptUri == null) {
@@ -291,7 +319,11 @@ private fun ExpenseEntryScreenContent(
                         onClick = onLaunchImagePicker,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(Icons.Filled.AddPhotoAlternate, contentDescription = "Add Receipt Icon", modifier = Modifier.size(ButtonDefaults.IconSize))
+                        Icon(
+                            Icons.Filled.AddPhotoAlternate,
+                            contentDescription = "Add Receipt Icon",
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
                         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                         Text("Add Receipt Image")
                     }
@@ -306,20 +338,23 @@ private fun ExpenseEntryScreenContent(
                                 try {
                                     val uri = Uri.parse(uriString)
                                     if (uriString.startsWith("content://")) {
-                                        context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                                            BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
-                                        }
-                                    } else { 
+                                        context.contentResolver.openInputStream(uri)
+                                            ?.use { inputStream ->
+                                                BitmapFactory.decodeStream(inputStream)
+                                                    ?.asImageBitmap()
+                                            }
+                                    } else {
                                         val file = File(uriString)
                                         if (file.exists()) {
                                             FileInputStream(file).use { inputStream ->
-                                                BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
+                                                BitmapFactory.decodeStream(inputStream)
+                                                    ?.asImageBitmap()
                                             }
                                         } else null
                                     }
                                 } catch (e: Exception) {
                                     e.printStackTrace()
-                                    null 
+                                    null
                                 }
                             }
                         }
@@ -352,7 +387,11 @@ private fun ExpenseEntryScreenContent(
 
                 if (uiState.receiptImageError != null) {
                     Spacer(Modifier.height(4.dp))
-                    Text(uiState.receiptImageError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        uiState.receiptImageError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
 
@@ -361,14 +400,24 @@ private fun ExpenseEntryScreenContent(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Possible Duplicate!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                    Column(
+                        Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "Possible Duplicate!",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
                         Text(
                             "An expense with similar details already exists. Are you sure you want to save this one?",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
                             OutlinedButton(onClick = onDismissDuplicateWarning) {
                                 Text("Cancel")
                             }

@@ -27,7 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -55,6 +57,14 @@ fun ExpenseListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val currencyFormatter = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
+
+    var showExpenseDetailDialog by remember { mutableStateOf(false) }
+    var expenseForDetail by remember { mutableStateOf<Expense?>(null) }
+
+    val onExpenseItemClick = { expense: Expense ->
+        expenseForDetail = expense
+        showExpenseDetailDialog = true
+    }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -91,8 +101,16 @@ fun ExpenseListScreen(
         onShowDatePicker = { datePickerDialog.show() },
         onGroupByChanged = viewModel::setGroupBy,
         onDeleteExpense = viewModel::deleteExpense,
-        onRefreshData = viewModel::refreshData
+        onRefreshData = viewModel::refreshData,
+        onExpenseItemClick = onExpenseItemClick
     )
+
+    if (showExpenseDetailDialog && expenseForDetail != null) {
+        ExpenseDetailDialog(
+            expense = expenseForDetail!!,
+            onDismiss = { showExpenseDetailDialog = false }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -108,6 +126,7 @@ private fun ExpenseListScreenContent(
     onGroupByChanged: (GroupByOption) -> Unit,
     onDeleteExpense: (Expense) -> Unit,
     onRefreshData: () -> Unit,
+    onExpenseItemClick: (Expense) -> Unit, // Added parameter
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -174,6 +193,7 @@ private fun ExpenseListScreenContent(
                 uiState = uiState,
                 onDeleteExpense = onDeleteExpense,
                 onNavigateToExpenseEdit = onNavigateToExpenseEdit,
+                onItemClick = onExpenseItemClick, // Passed down
                 onRefresh = onRefreshData
             )
         }
@@ -216,7 +236,8 @@ fun ExpenseListScreenPreview_Category() {
             onShowDatePicker = {},
             onGroupByChanged = {},
             onDeleteExpense = {},
-            onRefreshData = {}
+            onRefreshData = {},
+            onExpenseItemClick = {}
         )
     }
 }
@@ -226,20 +247,26 @@ fun ExpenseListScreenPreview_Category() {
 fun ExpenseListScreenPreview_Time() {
     val currentTime = System.currentTimeMillis()
     val sampleExpenses = listOf(
-        Expense(id = 1L, title = "Morning Coffee", amount = 60.0, category = CategoryType.FOOD.name, date = currentTime - 1000*60*60*3, notes = "notes"),
-        Expense(id = 2L, title = "Lunch", amount = 250.0, category = CategoryType.FOOD.name, date = currentTime - 1000*60*30, notes = "notes"),
+        Expense(id = 1L, title = "Morning Coffee", amount = 60.0, category = CategoryType.FOOD.name, date = currentTime - 1000 * 60 * 60 * 3, notes = "notes"),
+        Expense(id = 2L, title = "Lunch", amount = 250.0, category = CategoryType.FOOD.name, date = currentTime - 1000 * 60 * 30, notes = "notes"),
         Expense(id = 3L, title = "Snacks", amount = 100.0, category = CategoryType.FOOD.name, date = currentTime, notes = "notes")
     )
     val sampleTimeOfDayGroupedExpenses: Map<TimeOfDay, List<Expense>> = mapOf(
-        TimeOfDay.MORNING to sampleExpenses.filter { val hour = Calendar.getInstance().apply{timeInMillis = it.date}.get(Calendar.HOUR_OF_DAY); hour < 12 },
-        TimeOfDay.AFTERNOON to sampleExpenses.filter { val hour = Calendar.getInstance().apply{timeInMillis = it.date}.get(Calendar.HOUR_OF_DAY); hour in 12..16 },
-        TimeOfDay.EVENING to sampleExpenses.filter { val hour = Calendar.getInstance().apply{timeInMillis = it.date}.get(Calendar.HOUR_OF_DAY); hour > 16 }
+        TimeOfDay.MORNING to sampleExpenses.filter {
+            val hour = Calendar.getInstance().apply { timeInMillis = it.date }.get(Calendar.HOUR_OF_DAY); hour < 12
+        },
+        TimeOfDay.AFTERNOON to sampleExpenses.filter {
+            val hour = Calendar.getInstance().apply { timeInMillis = it.date }.get(Calendar.HOUR_OF_DAY); hour in 12..16
+        },
+        TimeOfDay.EVENING to sampleExpenses.filter {
+            val hour = Calendar.getInstance().apply { timeInMillis = it.date }.get(Calendar.HOUR_OF_DAY); hour > 16
+        }
     ).filterValues { it.isNotEmpty() }
 
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
 
     MaterialTheme {
-         ExpenseListScreenContent(
+        ExpenseListScreenContent(
             uiState = ExpenseListUiState(
                 expenses = sampleExpenses,
                 groupedExpenses = emptyMap(),
@@ -259,7 +286,8 @@ fun ExpenseListScreenPreview_Time() {
             onShowDatePicker = {},
             onGroupByChanged = {},
             onDeleteExpense = {},
-            onRefreshData = {}
+            onRefreshData = {},
+            onExpenseItemClick = {}
         )
     }
 }
@@ -270,7 +298,7 @@ fun ExpenseListScreenPreview_Empty() {
     val currentTime = System.currentTimeMillis()
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     MaterialTheme {
-         ExpenseListScreenContent(
+        ExpenseListScreenContent(
             uiState = ExpenseListUiState(
                 expenses = emptyList(),
                 groupedExpenses = emptyMap(),
@@ -290,7 +318,8 @@ fun ExpenseListScreenPreview_Empty() {
             onShowDatePicker = {},
             onGroupByChanged = {},
             onDeleteExpense = {},
-            onRefreshData = {}
+            onRefreshData = {},
+            onExpenseItemClick = {}
         )
     }
 }
