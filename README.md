@@ -97,7 +97,7 @@ Below are a few examples of key prompts used during development. For a more comp
 
 ## Resume
 
-[Link to your resume.pdf/resume.docx/resume.txt - To be added]
+[Link to my resume](./resume.pdf)
 
 ## Technologies Used
 
@@ -116,4 +116,11 @@ The application aims to follow Clean Architecture principles, separating concern
 *   **Domain Layer:** Contains use cases and business logic (currently partially implemented with use cases directly in ViewModels for some features).
 *   **Presentation Layer (UI):** Consists of Composable screens, ViewModels, and navigation.
 
+## Origin of requirements.md
+
+The `requirements.md` file was initially generated based on a PDF assignment, using ChatGPT with the following prompt:
+```
+
+You are the best android developer in the world. The pdf provided is the assignment that I need to complete in order to get a job. Use the pdf and provide a requirements.md file that I can copy and paste
+```
 ---
