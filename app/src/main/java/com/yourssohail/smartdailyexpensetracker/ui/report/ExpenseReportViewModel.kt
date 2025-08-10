@@ -1,11 +1,11 @@
 package com.yourssohail.smartdailyexpensetracker.ui.report
 
-import android.app.Application
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.OutputStream
 import java.text.NumberFormat
@@ -290,7 +291,6 @@ class ExpenseReportViewModel @Inject constructor(
         }
     }
 
-    // Existing function for sharing text summary, will be used by "Share as Text"
     fun onShareTextRequested() {
         viewModelScope.launch {
             val summary = generateReportSummaryText()
@@ -331,7 +331,6 @@ class ExpenseReportViewModel @Inject constructor(
         return csvBuilder.toString()
     }
 
-    // --- Methods for Exporting to Downloads (existing functionality) ---
     fun onExportCsvClicked() {
         viewModelScope.launch {
             val expensesToExport = uiState.value.expensesOverLast7Days
@@ -369,126 +368,131 @@ class ExpenseReportViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveCsvFileToDownloads(fileName: String, csvContent: String): Result<Unit> { // Renamed for clarity
+    private suspend fun saveCsvFileToDownloads(fileName: String, csvContent: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
                         put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                         put(MediaStore.MediaColumns.IS_PENDING, 1)
                     }
-                }
-                val resolver = applicationContext.contentResolver
-                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                    val resolver = applicationContext.contentResolver
+                    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
-                uri?.let { fileUri ->
-                    resolver.openOutputStream(fileUri).use { outputStream: OutputStream? ->
-                        outputStream?.bufferedWriter()?.use { writer ->
-                            writer.write(csvContent)
+                    uri?.let {
+                        resolver.openOutputStream(it).use { outputStream: OutputStream? ->
+                            outputStream?.bufferedWriter()?.use { writer ->
+                                writer.write(csvContent)
+                            } ?: return@withContext Result.failure(IOException("Failed to open output stream."))
                         }
-                            ?: return@withContext Result.failure(IOException("Failed to open output stream."))
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         contentValues.clear()
                         contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                        resolver.update(fileUri, contentValues, null, null)
+                        resolver.update(it, contentValues, null, null)
+                        Result.success(Unit)
+                    } ?: Result.failure(IOException("Failed to create MediaStore entry for CSV."))
+                } else {
+                    // Fallback for Android versions older than Q (API 29)
+                    // Note: This requires WRITE_EXTERNAL_STORAGE permission in AndroidManifest.xml
+                    // and runtime permission handling for API 23-28.
+                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    if (!downloadsDir.exists()) {
+                        downloadsDir.mkdirs()
                     }
+                    val file = File(downloadsDir, fileName)
+                    FileOutputStream(file).use { fos ->
+                        fos.bufferedWriter().use { writer ->
+                            writer.write(csvContent)
+                        }
+                    }
+                    // Notify media scanner about the new file so it appears in Downloads app etc.
+                    MediaScannerConnection.scanFile(applicationContext, arrayOf(file.absolutePath), null, null)
                     Result.success(Unit)
-                } ?: Result.failure(IOException("Failed to create MediaStore entry for CSV."))
+                }
             } catch (e: Exception) {
+                Log.e("ExpenseReportVM", "Error saving CSV to Downloads", e)
                 Result.failure(e)
             }
         }
     }
 
-    private suspend fun generateAndSavePdfReportToDownloads( // Renamed for clarity
+
+    private suspend fun generateAndSavePdfReportToDownloads(
         fileName: String,
         reportData: ExpenseReportUiState
     ): Result<Unit> {
         return withContext(Dispatchers.IO) {
             val pdfDocument = PdfDocument()
             try {
-                val pageInfo = PdfDocument.PageInfo.Builder(
-                    PdfConstants.A4_PAGE_WIDTH,
-                    PdfConstants.A4_PAGE_HEIGHT,
-                    1
-                ).create()
+                val pageInfo = PdfDocument.PageInfo.Builder(PdfConstants.A4_PAGE_WIDTH, PdfConstants.A4_PAGE_HEIGHT, 1).create()
                 val page = pdfDocument.startPage(pageInfo)
                 val canvas = page.canvas
 
+                // ... (PDF content generation - remains the same) ...
                 val titlePaint = PdfConstants.titlePaint()
                 val headerPaint = PdfConstants.headerPaint()
                 val bodyPaint = PdfConstants.bodyPaint()
-
                 var yPosition = PdfConstants.DEFAULT_MARGIN_FLOAT
                 val xMargin = PdfConstants.DEFAULT_MARGIN_FLOAT
 
                 canvas.drawText("Expense Report - Last 7 Days", xMargin, yPosition, titlePaint)
                 yPosition += PdfConstants.SECTION_SPACING_FLOAT * 1.5f
-
                 canvas.drawText("Daily Totals:", xMargin, yPosition, headerPaint)
                 yPosition += PdfConstants.SECTION_SPACING_FLOAT
                 reportData.dailyTotals.forEach {
-                    canvas.drawText(
-                        "${it.formattedDate}: ${currencyFormatter.format(it.totalAmount)}",
-                        xMargin,
-                        yPosition,
-                        bodyPaint
-                    )
+                    canvas.drawText("${it.formattedDate}: ${currencyFormatter.format(it.totalAmount)}", xMargin, yPosition, bodyPaint)
                     yPosition += PdfConstants.LINE_SPACING_FLOAT
                 }
                 yPosition += PdfConstants.SECTION_SPACING_FLOAT
-
-                val totalAllCategoriesFormatted =
-                    currencyFormatter.format(reportData.totalForAllCategories)
-                canvas.drawText(
-                    "Category Totals (Total: $totalAllCategoriesFormatted):",
-                    xMargin,
-                    yPosition,
-                    headerPaint
-                )
+                val totalAllCategoriesFormatted = currencyFormatter.format(reportData.totalForAllCategories)
+                canvas.drawText("Category Totals (Total: $totalAllCategoriesFormatted):", xMargin, yPosition, headerPaint)
                 yPosition += PdfConstants.SECTION_SPACING_FLOAT
                 reportData.categoryTotals.forEach {
-                    val categoryName = it.category.name.replaceFirstChar { char ->
-                        if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString()
-                    }
-                    canvas.drawText(
-                        "$categoryName (${it.percentage.roundToInt()}%): ${
-                            currencyFormatter.format(
-                                it.totalAmount
-                            )
-                        }", xMargin, yPosition, bodyPaint
-                    )
+                    val categoryName = it.category.name.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() }
+                    canvas.drawText("$categoryName (${it.percentage.roundToInt()}%): ${currencyFormatter.format(it.totalAmount)}", xMargin, yPosition, bodyPaint)
                     yPosition += PdfConstants.LINE_SPACING_FLOAT
                 }
                 pdfDocument.finishPage(page)
 
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                         put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
                         put(MediaStore.MediaColumns.IS_PENDING, 1)
                     }
-                }
-                val resolver = applicationContext.contentResolver
-                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                    val resolver = applicationContext.contentResolver
+                    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
-                uri?.let {
-                    resolver.openOutputStream(it).use { outputStream ->
-                        if (outputStream == null) return@withContext Result.failure(IOException("Failed to open output stream for PDF."))
-                        pdfDocument.writeTo(outputStream)
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    uri?.let {
+                        resolver.openOutputStream(it).use { outputStream ->
+                            if (outputStream == null) return@withContext Result.failure(IOException("Failed to open output stream for PDF."))
+                            pdfDocument.writeTo(outputStream)
+                        }
                         contentValues.clear()
                         contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
                         resolver.update(it, contentValues, null, null)
+                        Result.success(Unit)
+                    } ?: Result.failure(IOException("Failed to create MediaStore entry for PDF."))
+                } else {
+                    // Fallback for Android versions older than Q (API 29)
+                    // Note: This requires WRITE_EXTERNAL_STORAGE permission in AndroidManifest.xml
+                    // and runtime permission handling for API 23-28.
+                    val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    if (!downloadsDir.exists()) {
+                        downloadsDir.mkdirs()
                     }
+                    val file = File(downloadsDir, fileName)
+                    FileOutputStream(file).use { fos ->
+                        pdfDocument.writeTo(fos)
+                    }
+                    // Notify media scanner about the new file
+                    MediaScannerConnection.scanFile(applicationContext, arrayOf(file.absolutePath), null, null)
                     Result.success(Unit)
-                } ?: Result.failure(IOException("Failed to create MediaStore entry for PDF."))
+                }
             } catch (e: Exception) {
+                Log.e("ExpenseReportVM", "Error saving PDF to Downloads", e)
                 Result.failure(e)
             } finally {
                 pdfDocument.close()
@@ -496,7 +500,7 @@ class ExpenseReportViewModel @Inject constructor(
         }
     }
 
-    // --- Methods for Sharing via Cache and FileProvider ---
+    // --- Methods for Sharing via Cache and FileProvider --- (Remain Unchanged)
     private suspend fun saveCsvToCacheForSharing(context: Context, fileName: String, csvContent: String): Result<Uri> {
         return withContext(Dispatchers.IO) {
             try {
@@ -520,6 +524,7 @@ class ExpenseReportViewModel @Inject constructor(
                 val pageInfo = PdfDocument.PageInfo.Builder(PdfConstants.A4_PAGE_WIDTH, PdfConstants.A4_PAGE_HEIGHT, 1).create()
                 val page = pdfDocument.startPage(pageInfo)
                 val canvas = page.canvas
+                // ... (PDF content generation for sharing - remains the same) ...
                 val titlePaint = PdfConstants.titlePaint()
                 val headerPaint = PdfConstants.headerPaint()
                 val bodyPaint = PdfConstants.bodyPaint()
@@ -547,7 +552,7 @@ class ExpenseReportViewModel @Inject constructor(
 
                 val shareDir = getShareCacheDir(context)
                 val file = File(shareDir, fileName)
-                file.outputStream().use { fos -> pdfDocument.writeTo(fos) }
+                FileOutputStream(file).use { fos -> pdfDocument.writeTo(fos) }
                 pdfDocument.close()
 
                 val authority = "${context.packageName}.provider" // Ensure this matches AndroidManifest
