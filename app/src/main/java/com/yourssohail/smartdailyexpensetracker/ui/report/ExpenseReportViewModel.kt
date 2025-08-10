@@ -6,7 +6,13 @@ import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetSevenDayReportUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -60,11 +66,11 @@ class ExpenseReportViewModel @Inject constructor(
 
     private val reportDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     private val fileTimestampFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-    private val shortDateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
+    private val shortDateFormat = SimpleDateFormat("dd/MM", Locale.getDefault()) // Changed format here
 
 
     // Flag to control dummy data. Set to true to always show dummy data for reports.
-    private val useDummyDataForReport = true // TODO: Set to false for production
+    var useDummyDataForReport = true
 
     init {
         loadReportData()
@@ -73,7 +79,7 @@ class ExpenseReportViewModel @Inject constructor(
     private fun generateDummyExpensesForLast7Days(): List<Expense> {
         val dummyExpenses = mutableListOf<Expense>()
         val calendar = Calendar.getInstance()
-        val categories = CategoryType.values()
+        val categories = CategoryType.entries
 
         for (i in 6 downTo 0) { // Last 7 days, including today
             calendar.time = Date() // Reset to today
