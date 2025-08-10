@@ -344,7 +344,7 @@ internal fun ListContent(
                         uiState.selectedDate,
                         DatePatterns.SHORT_COMPONENTS
                     )
-                }.\\nTap the '+' button to add one!"
+                }.\nTap the '+' button to add one!"
             )
         }
 
