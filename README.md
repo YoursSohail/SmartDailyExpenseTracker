@@ -95,7 +95,7 @@ Below are a few examples of key prompts used during development. For a more comp
 
 ## APK Download Link
 
-[Link to APK - To be added]
+[Download Expense Buddy APK](./app/build/outputs/apk/debug/expense_buddy.apk)
 
 ## Screenshots
 
