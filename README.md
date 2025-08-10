@@ -1,6 +1,6 @@
 # Expense Buddy
 
-[App Logo - To be added]
+![Expense Buddy Logo](./app/src/main/res/mipmap-xxhdpi/ic_launcher.webp)
 
 ## App Overview
 
