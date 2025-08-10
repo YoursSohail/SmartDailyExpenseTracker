@@ -349,7 +349,7 @@ fun CustomGroupToggleSwitch(
                 modifier = Modifier.size(20.dp),
                 contentDescription = "Group by Category",
                 tint = if (currentOption == GroupByOption.CATEGORY)
-                    MaterialTheme.colorScheme.onSurface
+                    MaterialTheme.colorScheme.primary
                 else
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
@@ -382,7 +382,7 @@ fun CustomGroupToggleSwitch(
                 contentDescription = "Group by Time",
                 modifier = Modifier.size(20.dp),
                 tint = if (currentOption == GroupByOption.TIME)
-                    MaterialTheme.colorScheme.onSurface
+                    MaterialTheme.colorScheme.primary
                 else
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )

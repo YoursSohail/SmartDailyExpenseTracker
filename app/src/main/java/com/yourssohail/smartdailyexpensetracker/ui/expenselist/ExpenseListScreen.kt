@@ -35,11 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense // Added import
+import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
-// import java.util.Calendar // No longer directly needed here after rememberDatePickerDialog is self-contained
+import java.util.Calendar // Needed for rememberDatePickerDialog if defined here
 import java.util.Date
 import java.util.Locale
 
@@ -106,7 +106,7 @@ private fun ExpenseListScreenContent(
     onNavigateToExpenseEdit: (expenseId: Long) -> Unit,
     onShowDatePicker: () -> Unit,
     onGroupByChanged: (GroupByOption) -> Unit,
-    onDeleteExpense: (Expense) -> Unit, // Changed from Long to Expense
+    onDeleteExpense: (Expense) -> Unit,
     onRefreshData: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -119,7 +119,7 @@ private fun ExpenseListScreenContent(
                     IconButton(onClick = onShowDatePicker) {
                         Icon(Icons.Default.DateRange, contentDescription = "Select Date")
                     }
-                    CustomGroupToggleSwitch( // Assuming this is accessible from ExpenseListComponents.kt
+                    CustomGroupToggleSwitch(
                         currentOption = uiState.groupBy,
                         onOptionSelected = onGroupByChanged,
                         modifier = Modifier.padding(horizontal = 8.dp)
@@ -141,7 +141,7 @@ private fun ExpenseListScreenContent(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 4.dp // Or use Card for elevation
+                shadowElevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier
@@ -154,18 +154,25 @@ private fun ExpenseListScreenContent(
                         text = selectedDateFormatted,
                         style = MaterialTheme.typography.titleMedium
                     )
-                    Text(
-                        text = "$totalSpentFormatted ($totalExpenseCount)",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Column(horizontalAlignment = Alignment.End) { // Changed to Column, aligned to End
+                        Text(
+                            text = totalSpentFormatted,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Total transactions - $totalExpenseCount",
+                            style = MaterialTheme.typography.bodySmall, // Smaller style
+                            color = MaterialTheme.colorScheme.onSurfaceVariant // Subdued color
+                        )
+                    }
                 }
             }
 
-            ListContent( // Assuming this is accessible from ExpenseListComponents.kt
+            ListContent(
                 uiState = uiState,
-                onDeleteExpense = onDeleteExpense, // Now expects (Expense) -> Unit
+                onDeleteExpense = onDeleteExpense,
                 onNavigateToExpenseEdit = onNavigateToExpenseEdit,
                 onRefresh = onRefreshData
             )
@@ -180,7 +187,7 @@ fun ExpenseListScreenPreview_Category() {
     val sampleExpenses = listOf(
         Expense(id = 1L, title = "Lunch", amount = 150.0, category = CategoryType.FOOD.name, date = currentTime, notes = "notes 1"),
         Expense(id = 2L, title = "Coffee", amount = 50.0, category = CategoryType.FOOD.name, date = currentTime - 10000, notes = "notes 2"),
-        Expense(id = 3L, title = "Movie Ticket", amount = 300.0, category = CategoryType.TRAVEL.name, date = currentTime - 20000, notes = "notes 3")
+        Expense(id = 3L, title = "Movie Ticket", amount = 300.0, category = CategoryType.TRAVEL.name, date = currentTime - 20000, notes = "notes 3") // Assuming ENTERTAINMENT is a valid CategoryType
     )
     val sampleGroupedExpenses: Map<CategoryType, List<Expense>> = mapOf(
         CategoryType.FOOD to sampleExpenses.filter { it.category == CategoryType.FOOD.name },
@@ -188,12 +195,12 @@ fun ExpenseListScreenPreview_Category() {
     )
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
 
-    MaterialTheme { // Replace with your app's theme
+    MaterialTheme {
         ExpenseListScreenContent(
             uiState = ExpenseListUiState(
                 expenses = sampleExpenses,
                 groupedExpenses = sampleGroupedExpenses,
-                timeOfDayGroupedExpenses = emptyMap(), // Provide for completeness
+                timeOfDayGroupedExpenses = emptyMap(),
                 selectedDate = currentTime,
                 totalSpentForSelectedDate = 500.0,
                 totalExpenseCountForSelectedDate = 3,
@@ -223,11 +230,10 @@ fun ExpenseListScreenPreview_Time() {
         Expense(id = 2L, title = "Lunch", amount = 250.0, category = CategoryType.FOOD.name, date = currentTime - 1000*60*30, notes = "notes"),
         Expense(id = 3L, title = "Snacks", amount = 100.0, category = CategoryType.FOOD.name, date = currentTime, notes = "notes")
     )
-    // Simplified time grouping for preview - actual ViewModel logic is more robust
     val sampleTimeOfDayGroupedExpenses: Map<TimeOfDay, List<Expense>> = mapOf(
-        TimeOfDay.MORNING to sampleExpenses.filter { val hour = java.util.Calendar.getInstance().apply{timeInMillis = it.date}.get(java.util.Calendar.HOUR_OF_DAY); hour < 12 },
-        TimeOfDay.AFTERNOON to sampleExpenses.filter { val hour = java.util.Calendar.getInstance().apply{timeInMillis = it.date}.get(java.util.Calendar.HOUR_OF_DAY); hour in 12..16 },
-        TimeOfDay.EVENING to sampleExpenses.filter { val hour = java.util.Calendar.getInstance().apply{timeInMillis = it.date}.get(java.util.Calendar.HOUR_OF_DAY); hour > 16 }
+        TimeOfDay.MORNING to sampleExpenses.filter { val hour = Calendar.getInstance().apply{timeInMillis = it.date}.get(Calendar.HOUR_OF_DAY); hour < 12 },
+        TimeOfDay.AFTERNOON to sampleExpenses.filter { val hour = Calendar.getInstance().apply{timeInMillis = it.date}.get(Calendar.HOUR_OF_DAY); hour in 12..16 },
+        TimeOfDay.EVENING to sampleExpenses.filter { val hour = Calendar.getInstance().apply{timeInMillis = it.date}.get(Calendar.HOUR_OF_DAY); hour > 16 }
     ).filterValues { it.isNotEmpty() }
 
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
@@ -236,7 +242,7 @@ fun ExpenseListScreenPreview_Time() {
          ExpenseListScreenContent(
             uiState = ExpenseListUiState(
                 expenses = sampleExpenses,
-                groupedExpenses = emptyMap(), // Provide for completeness
+                groupedExpenses = emptyMap(),
                 timeOfDayGroupedExpenses = sampleTimeOfDayGroupedExpenses,
                 selectedDate = currentTime,
                 totalSpentForSelectedDate = 410.0,
@@ -288,9 +294,3 @@ fun ExpenseListScreenPreview_Empty() {
         )
     }
 }
-
-// NOTE: For these previews to work fully, the actual 'ListContent' and 'CustomGroupToggleSwitch'
-// composables (likely from ExpenseListComponents.kt) need to be accessible 
-// and correctly interpret the updated ExpenseListUiState (using List<Expense>).
-// You may need to import them if they are not in this package.
-// Also ensure Expense, GroupByOption, TimeOfDay are imported or accessible.
