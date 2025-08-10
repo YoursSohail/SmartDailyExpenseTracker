@@ -30,10 +30,11 @@ interface ExpenseDao {
     @Update
     suspend fun updateExpense(expense: Expense)
 
-    /*¯*
+
+    /**
      * Deletes an expense from the database.
      *
-     * @param expense The expense to be deleted. If the expense does not exist in the database, the deletion will have no effect.
+     * @param expense The expense to be deleted.
      */
     @Delete
     suspend fun deleteExpense(expense: Expense)
@@ -82,7 +83,6 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE date BETWEEN :todayStart AND :todayEnd ORDER BY date DESC")
     fun getExpensesForToday(todayStart: Long, todayEnd: Long): Flow<List<Expense>>
 
-/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
     /**
      * Calculates the total amount spent on expenses within a specified date range.
      *
@@ -90,11 +90,10 @@ interface ExpenseDao {
      * @param dateEnd The end of the date range (inclusive) in milliseconds since the Unix epoch.
      * @return A Flow emitting the total amount spent, or null if no expenses exist within the date range.
      */
-/* <<<<<<<<<<  acb6fa2e-530b-4e7d-a127-16c81b6646f1  >>>>>>>>>>> */
     @Query("SELECT SUM(amount) FROM expenses WHERE date BETWEEN :dateStart AND :dateEnd")
     fun getTotalSpentOnDate(dateStart: Long, dateEnd: Long): Flow<Double?>
 
-/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+
     /**
      * Retrieves the first expense from the database that matches the given title, amount, and falls within the given date range.
      * This is used to detect duplicate expenses.
@@ -105,7 +104,7 @@ interface ExpenseDao {
      * @param dateEnd The end of the date range (inclusive) in milliseconds since the Unix epoch.
      * @return A Flow emitting the first matching expense, or null if no such expense exists.
      */
-/* <<<<<<<<<<  ac493c23-add7-4d9e-b81f-67b1595dc6b1  >>>>>>>>>>> */
+
     @Query("SELECT * FROM expenses WHERE title = :title AND amount = :amount AND date BETWEEN :dateStart AND :dateEnd LIMIT 1")
     fun detectDuplicate(title: String, amount: Double, dateStart: Long, dateEnd: Long): Flow<Expense?>
 
