@@ -126,7 +126,7 @@ fun ExpenseListScreen(
                 ) {
                     val selectedDateFormatted = DATE_FORMAT_DISPLAY.format(Date(uiState.selectedDate))
                     Text(
-                        text = "Total for: $selectedDateFormatted",
+                        text = selectedDateFormatted,
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(

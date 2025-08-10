@@ -35,13 +35,13 @@ import ir.ehsannarmani.compose_charts.models.LabelProperties
 @Composable
 fun ReportSectionCard(
     title: String,
-    modifier: Modifier = Modifier, 
+    modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(), 
+        modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant) 
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -68,11 +68,11 @@ fun DailyExpenseChartCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Daily Expenses", 
+                text = "Daily Expenses",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            
+
             ColumnChart(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,19 +82,19 @@ fun DailyExpenseChartCard(
                     enabled = true,
                     textStyle = TextStyle(
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 10.sp 
+                        fontSize = 10.sp
                     )
                 ),
                 indicatorProperties = HorizontalIndicatorProperties(
                     textStyle = TextStyle(
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface 
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                     count = IndicatorCount.CountBased(count = 4),
                     position = IndicatorPosition.Horizontal.Start,
                 ),
                 barProperties = BarProperties(
-                    cornerRadius = Bars.Data.Radius.Circular(4.dp),
+                    cornerRadius = Bars.Data.Radius.Rectangle(topLeft = 4.dp, topRight = 4.dp),
                 ),
                 labelHelperProperties = LabelHelperProperties(
                     textStyle = TextStyle(
@@ -130,15 +130,33 @@ fun DailyExpenseChartCardPreview() {
             listOf(
                 Bars(
                     label = "Mon",
-                    values = listOf(Bars.Data(value = 150.0, label = "Expense", color = Brush.verticalGradient(listOf(Color.Blue, Color.Cyan))))
+                    values = listOf(
+                        Bars.Data(
+                            value = 150.0,
+                            label = "Expense",
+                            color = Brush.verticalGradient(listOf(Color.Blue, Color.Cyan))
+                        )
+                    )
                 ),
                 Bars(
                     label = "Tue",
-                    values = listOf(Bars.Data(value = 250.0, label = "Expense", color = Brush.verticalGradient(listOf(Color.Blue, Color.Cyan))))
+                    values = listOf(
+                        Bars.Data(
+                            value = 250.0,
+                            label = "Expense",
+                            color = Brush.verticalGradient(listOf(Color.Blue, Color.Cyan))
+                        )
+                    )
                 ),
                 Bars(
                     label = "Wed",
-                    values = listOf(Bars.Data(value = 100.0, label = "Expense", color = Brush.verticalGradient(listOf(Color.Blue, Color.Cyan))))
+                    values = listOf(
+                        Bars.Data(
+                            value = 100.0,
+                            label = "Expense",
+                            color = Brush.verticalGradient(listOf(Color.Blue, Color.Cyan))
+                        )
+                    )
                 )
             )
         }

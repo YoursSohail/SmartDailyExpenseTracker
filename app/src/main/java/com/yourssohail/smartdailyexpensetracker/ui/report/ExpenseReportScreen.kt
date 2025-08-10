@@ -139,23 +139,6 @@ fun ExpenseReportScreen(
                             Text("Not enough data for chart.", style = MaterialTheme.typography.bodySmall)
                         }
                         val totalFormatted = currencyFormatter.format(uiState.totalForAllCategories)
-                        ReportSectionCard(title = "Daily Totals") {
-                            if (uiState.dailyTotals.isEmpty()){
-                                Text("No daily totals to display.", style = MaterialTheme.typography.bodySmall)
-                            } else {
-                                uiState.dailyTotals.forEach { daily ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(daily.formattedDate, style = MaterialTheme.typography.bodyLarge) 
-                                        Text(currencyFormatter.format(daily.totalAmount), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                                    }
-                                    HorizontalDivider()
-                                }
-                            }
-                        }
-
                         ReportSectionCard(title = "Category Totals (Total: $totalFormatted)") {
                             if (uiState.categoryTotals.isEmpty()){
                                  Text("No expenses with categories found.", style = MaterialTheme.typography.bodySmall)
@@ -174,6 +157,7 @@ fun ExpenseReportScreen(
                                     }
                                     LinearProgressIndicator(
                                         progress = { categoryTotal.percentage / 100f },
+                                        color = categoryTotal.category.color, // Added category color here
                                         modifier = Modifier.fillMaxWidth().height(6.dp)
                                     )
                                     Spacer(Modifier.height(4.dp))
