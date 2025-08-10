@@ -100,7 +100,20 @@ Below are a few examples of key prompts used during development. For a more comp
 
 ## Screenshots
 
-[Screenshots - To be added]
+### Light Mode
+
+![Light Mode Screenshot 1](./screenshots/light/Screenshot_20250810_174433_Expense%20Buddy.jpg)
+![Light Mode Screenshot 2](./screenshots/light/Screenshot_20250810_174442_Expense%20Buddy.jpg)
+![Light Mode Screenshot 3](./screenshots/light/Screenshot_20250810_175625_Expense%20Buddy.jpg)
+![Light Mode Screenshot 4](./screenshots/light/Screenshot_20250810_175636_Expense%20Buddy.jpg)
+
+### Dark Mode
+
+![Dark Mode Screenshot 1](./screenshots/dark/Screenshot_20250810_175647_Expense%20Buddy.jpg)
+![Dark Mode Screenshot 2](./screenshots/dark/Screenshot_20250810_175656_Expense%20Buddy.jpg)
+![Dark Mode Screenshot 3](./screenshots/dark/Screenshot_20250810_175702_Expense%20Buddy.jpg)
+![Dark Mode Screenshot 4](./screenshots/dark/Screenshot_20250810_175714_Expense%20Buddy.jpg)
+
 *(Please add screenshots of the application in light and dark mode for key screens: Expense List, Expense Entry, Expense Report, Settings.)*
 
 ## Resume
@@ -123,5 +136,3 @@ The application aims to follow Clean Architecture principles, separating concern
 *   **Data Layer:** Handles data sources (Room database, preferences DataStore) and repositories.
 *   **Domain Layer:** Contains use cases and business logic (currently partially implemented with use cases directly in ViewModels for some features).
 *   **Presentation Layer (UI):** Consists of Composable screens, ViewModels, and navigation.
-
----
