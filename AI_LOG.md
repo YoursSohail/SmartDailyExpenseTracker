@@ -2,20 +2,6 @@
 
 This document logs interactions with the AI assistant during the development of the Smart Daily Expense Tracker application.
 
-## Date: [Current Date]
-
-### Task: [Brief Description of Task]
-*   **User Prompt:** "..."
-*   **AI Response/Action:** "..."
-    *   *Tool Code (if any):*
-        ```python
-        # Tool code executed
-        ```
-    *   *Result/Output:* "..."
-*   **User Prompt (Retry/Refinement):** "..."
-*   **AI Response/Action:** "..."
-*   **Outcome:** ...
-
 ---
 
 ## Noteworthy Prompts & Interactions
