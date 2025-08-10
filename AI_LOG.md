@@ -31,7 +31,7 @@ This section highlights prompts or interaction sequences that were particularly 
 3.  **Refactoring with Common UI Components (Gemini - In-IDE Assistant):**
     *   **Initial Prompt:**
         ```
-        Let'''s create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`.
+        Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`.
         ```
     *   **Follow-up Prompts:** Iteratively asked to add `ScreenErrorMessage`, `EmptyStateView`, and `SectionTitle` to the same file. Then, requested to refactor specific screens (`ExpenseListComponents.kt`, `ExpenseReportScreen.kt`, `ExpenseEntryScreen.kt`, `SettingsScreen.kt`) to use these new common components.
     *   **Effectiveness:** This multi-step approach allowed for focused development of common components first, followed by systematic refactoring of existing screens, improving code reusability and maintainability.
@@ -39,7 +39,7 @@ This section highlights prompts or interaction sequences that were particularly 
 4.  **Addressing API Level Compatibility for File Saving (`MediaStore`) (Gemini - In-IDE Assistant):**
     *   **User Prompt (identifying issue):**
         ```
-        `val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI
         ```
     *   **AI Plan & Execution:** The AI correctly identified the issue and proposed a plan to use `Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)` for older APIs and `MediaStore` for API 29+. It then updated the relevant functions (`saveCsvFileToDownloads`, `generateAndSavePdfReportToDownloads` in `ExpenseReportViewModel.kt`) accordingly.
     *   **Effectiveness:** This demonstrated problem-solving by adapting code to handle platform version differences and ensuring backward compatibility.
@@ -56,7 +56,7 @@ This section highlights prompts or interaction sequences that were particularly 
 6.  **Reusable `ProgressButton` Creation and Integration (Gemini - In-IDE Assistant):**
     *   **User Prompt (summarized):**
         ```
-        Let'''s proceed with developing the `ProgressButton`. It should show text by default and a `CircularProgressIndicator` when loading. Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button.
+        Let's proceed with developing the `ProgressButton`. It should show text by default and a `CircularProgressIndicator` when loading. Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button.
         ```
     *   **AI Response/Action:**
         *   Proposed the `ProgressButton` composable signature and implementation details.
