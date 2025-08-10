@@ -50,35 +50,25 @@ Below are a few examples of key prompts used during development. For a more comp
 3.  **Refactoring with Common UI Components (Gemini):**
     *   **Initial Prompt:**
         ```
-        Let'''s create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+        Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
         ```
     *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
-4.  **UI Layout Update in `ExpenseListScreen.kt` (Gemini):**
-    *   **User Prompt:**
-        ```
-        instead of showing total expense count in brackets show it below the totalSpentFormatted - "Total transactions - 3"
-        ```
-    *   **Effectiveness:** AI modified the Jetpack Compose layout in `ExpenseListScreen.kt` to display the transaction count on a new line with specific styling, directly addressing the user's request for improved UI clarity.
 
-5.  **Component Refactoring and File Organization (Gemini):**
+4. **Organizing Screen-Specific UI into `ExpenseListComponents.kt` (Gemini):**
     *   **User Prompt:**
         ```
-        move ThemeSettingOption into a separate file and add its preview
-        ```
-    *   **Effectiveness:** AI successfully refactored the code by creating a new file (`SettingsComponents.kt`), moving the `ThemeSettingOption` composable and its associated previews into it, and ensuring the original screen (`SettingsScreen.kt`) correctly utilized the component from its new location. This improved code modularity and organization.
-
-6.  **Organizing Screen-Specific UI into `ExpenseListComponents.kt` (Gemini):**
-    *   **User Prompt:**
-        ```
-        For the `ExpenseListScreen`, let'''s improve its structure. Create a new file named `ExpenseListComponents.kt`. Move helper composables like `ListContent` and `AnimatedExpenseListItem` from `ExpenseListScreen.kt` into this new components file. Ensure `ExpenseListScreen.kt` now imports and uses them correctly.
+        For the `ExpenseListScreen`, let's improve its structure. Create a new file named `ExpenseListComponents.kt`. Move helper composables like `ListContent` and `AnimatedExpenseListItem` from `ExpenseListScreen.kt` into this new components file. Ensure `ExpenseListScreen.kt` now imports and uses them correctly.
         ```
     *   **Effectiveness:** This led to better organization of the `ExpenseListScreen`'s UI logic, separating the main screen structure from its more granular, list-related components, improving readability and maintainability.
 
-7.  **Batch KDoc Documentation for Use Cases (Gemini):**
+5. **Batch KDoc Documentation for Use Cases (Gemini):**
     *   **User Prompt:**
         ```
-        add docstring to all the methods in different use case files
+        Add docstring to all the methods for:
+        - Use case files
+        - Repository files
+        - ViewModel files
         ```
     *   **Effectiveness:** Efficiently applied documentation standards across multiple files in the domain layer based on a single, high-level request, saving significant manual effort and improving code maintainability.
 
