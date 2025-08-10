@@ -67,9 +67,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.ui.common.ProgressButton
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
+import com.yourssohail.smartdailyexpensetracker.utils.DatePatterns
+import com.yourssohail.smartdailyexpensetracker.utils.formatDate
 import java.io.File
 import java.io.FileInputStream
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
@@ -275,7 +276,7 @@ private fun ExpenseEntryScreenContent(
             ).apply { datePicker.maxDate = System.currentTimeMillis() }
 
             OutlinedTextField(
-                value = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(uiState.date),
+                value = formatDate(uiState.date, DatePatterns.CSV_DATE),
                 onValueChange = {},
                 label = { Text("Date") },
                 readOnly = true,

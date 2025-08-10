@@ -14,6 +14,7 @@ import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetExpenseByIdUse
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.ValidateExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.ValidationResult
 import com.yourssohail.smartdailyexpensetracker.ui.navigation.EXPENSE_ID_ARG
+import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +30,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
@@ -75,8 +75,6 @@ class ExpenseEntryViewModel @Inject constructor(
      * List of available [CategoryType]s for expense categorization.
      */
     val categories: List<CategoryType> = CategoryType.entries.toList()
-
-    private val indianCurrencyFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
 
     init {
         val expenseId = savedStateHandle.get<Long>(EXPENSE_ID_ARG)
@@ -133,7 +131,7 @@ class ExpenseEntryViewModel @Inject constructor(
 
             expenseRepository.getTotalSpentOnDate(startOfDayMillis, endOfDayMillis)
                 .collectLatest { total ->
-                    val formattedTotal = indianCurrencyFormat.format(total ?: 0.0)
+                    val formattedTotal = CURRENCY_FORMATTER_INR.format(total ?: 0.0)
                     _uiState.update { it.copy(totalSpentToday = formattedTotal) }
                 }
         }

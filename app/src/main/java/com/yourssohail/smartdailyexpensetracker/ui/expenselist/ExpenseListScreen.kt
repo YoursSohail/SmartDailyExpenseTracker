@@ -39,13 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
+import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
+import com.yourssohail.smartdailyexpensetracker.utils.DatePatterns
+import com.yourssohail.smartdailyexpensetracker.utils.formatDate
 import java.util.Calendar // Needed for rememberDatePickerDialog if defined here
 import java.util.Date
 import java.util.Locale
 
-private val DATE_FORMAT_DISPLAY = SimpleDateFormat("EEE, dd MMM yyyy", Locale.getDefault())
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -56,7 +56,6 @@ fun ExpenseListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val currencyFormatter = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
 
     var showExpenseDetailDialog by remember { mutableStateOf(false) }
     var expenseForDetail by remember { mutableStateOf<Expense?>(null) }
@@ -85,10 +84,10 @@ fun ExpenseListScreen(
     )
 
     val selectedDateFormatted = remember(uiState.selectedDate) {
-        DATE_FORMAT_DISPLAY.format(Date(uiState.selectedDate))
+        formatDate(uiState.selectedDate, DatePatterns.FULL_DISPLAY_WITH_TIME)
     }
     val totalSpentFormatted = remember(uiState.totalSpentForSelectedDate) {
-        currencyFormatter.format(uiState.totalSpentForSelectedDate ?: 0.0)
+        CURRENCY_FORMATTER_INR.format(uiState.totalSpentForSelectedDate ?: 0.0)
     }
 
     ExpenseListScreenContent(
@@ -213,7 +212,6 @@ fun ExpenseListScreenPreview_Category() {
         CategoryType.FOOD to sampleExpenses.filter { it.category == CategoryType.FOOD.name },
         CategoryType.TRAVEL to sampleExpenses.filter { it.category == CategoryType.TRAVEL.name }
     )
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
 
     MaterialTheme {
         ExpenseListScreenContent(
@@ -228,8 +226,8 @@ fun ExpenseListScreenPreview_Category() {
                 errorMessage = null,
                 groupBy = GroupByOption.CATEGORY
             ),
-            selectedDateFormatted = DATE_FORMAT_DISPLAY.format(Date(currentTime)),
-            totalSpentFormatted = currencyFormatter.format(500.0),
+            selectedDateFormatted = formatDate(currentTime, DatePatterns.FULL_DISPLAY_WITH_TIME),
+            totalSpentFormatted = CURRENCY_FORMATTER_INR.format(500.0),
             totalExpenseCount = 3,
             onNavigateToExpenseEntry = {},
             onNavigateToExpenseEdit = {},
@@ -263,8 +261,6 @@ fun ExpenseListScreenPreview_Time() {
         }
     ).filterValues { it.isNotEmpty() }
 
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-
     MaterialTheme {
         ExpenseListScreenContent(
             uiState = ExpenseListUiState(
@@ -278,8 +274,8 @@ fun ExpenseListScreenPreview_Time() {
                 errorMessage = null,
                 groupBy = GroupByOption.TIME
             ),
-            selectedDateFormatted = DATE_FORMAT_DISPLAY.format(Date(currentTime)),
-            totalSpentFormatted = currencyFormatter.format(410.0),
+            selectedDateFormatted = formatDate(currentTime, DatePatterns.FULL_DISPLAY_WITH_TIME),
+            totalSpentFormatted = CURRENCY_FORMATTER_INR.format(410.0),
             totalExpenseCount = 3,
             onNavigateToExpenseEntry = {},
             onNavigateToExpenseEdit = {},
@@ -296,7 +292,6 @@ fun ExpenseListScreenPreview_Time() {
 @Composable
 fun ExpenseListScreenPreview_Empty() {
     val currentTime = System.currentTimeMillis()
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     MaterialTheme {
         ExpenseListScreenContent(
             uiState = ExpenseListUiState(
@@ -310,8 +305,8 @@ fun ExpenseListScreenPreview_Empty() {
                 errorMessage = null,
                 groupBy = GroupByOption.CATEGORY
             ),
-            selectedDateFormatted = DATE_FORMAT_DISPLAY.format(Date(currentTime)),
-            totalSpentFormatted = currencyFormatter.format(0.0),
+            selectedDateFormatted = formatDate(currentTime, DatePatterns.FULL_DISPLAY_WITH_TIME),
+            totalSpentFormatted = CURRENCY_FORMATTER_INR.format(0.0),
             totalExpenseCount = 0,
             onNavigateToExpenseEntry = {},
             onNavigateToExpenseEdit = {},

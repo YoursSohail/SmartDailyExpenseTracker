@@ -3,8 +3,6 @@ package com.yourssohail.smartdailyexpensetracker.ui.expenselist
 import android.app.DatePickerDialog
 import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,12 +28,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
@@ -48,7 +43,6 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-// import androidx.compose.material3.CircularProgressIndicator // No longer directly used here
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,26 +69,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yourssohail.smartdailyexpensetracker.data.local.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
 import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
 import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
+import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
+import com.yourssohail.smartdailyexpensetracker.utils.DatePatterns
+import com.yourssohail.smartdailyexpensetracker.utils.formatDate
 import java.io.File
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.EnumMap
 import java.util.Locale
-
-internal val DATE_FORMAT_SHORT_COMPONENTS = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-private val DATE_FORMAT_FULL_DISPLAY = SimpleDateFormat("EEE, dd MMM yyyy, hh:mm a", Locale.getDefault())
-private val CURRENCY_FORMATTER = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
 
 
 @Composable
@@ -112,7 +101,7 @@ fun ExpenseDetailDialog(
             ) {
                 // Amount
                 Text(
-                    text = CURRENCY_FORMATTER.format(expense.amount),
+                    text = CURRENCY_FORMATTER_INR.format(expense.amount),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -129,7 +118,13 @@ fun ExpenseDetailDialog(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Category: ${expense.category.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}",
+                        text = "Category: ${
+                            expense.category.replaceFirstChar {
+                                if (it.isLowerCase()) it.titlecase(
+                                    Locale.getDefault()
+                                ) else it.toString()
+                            }
+                        }",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -144,7 +139,7 @@ fun ExpenseDetailDialog(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Date: ${DATE_FORMAT_FULL_DISPLAY.format(Date(expense.date))}",
+                        text = "Date: ${formatDate(expense.date, DatePatterns.FULL_DISPLAY_WITH_TIME)}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -156,16 +151,22 @@ fun ExpenseDetailDialog(
                         Icon(
                             imageVector = Icons.Filled.Notes,
                             contentDescription = "Notes Icon",
-                            modifier = Modifier.size(20.dp).padding(top = 2.dp),
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(top = 2.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(Modifier.width(8.dp))
                         Column {
-                           Text("Notes:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                           Text(
-                               text = expense.notes,
-                               style = MaterialTheme.typography.bodyLarge
-                           )
+                            Text(
+                                "Notes:",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = expense.notes,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     }
                 }
@@ -174,13 +175,19 @@ fun ExpenseDetailDialog(
                 expense.receiptImagePath?.let { path ->
                     if (path.isNotBlank()) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                        Text("Receipt:", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 4.dp))
+                        Text(
+                            "Receipt:",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
                         val imageBitmap = remember(path) {
                             try {
                                 val file = File(path)
                                 if (file.exists()) {
                                     BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
-                                } else { null }
+                                } else {
+                                    null
+                                }
                             } catch (e: Exception) {
                                 null
                             }
@@ -194,7 +201,11 @@ fun ExpenseDetailDialog(
                                     .fillMaxWidth()
                                     .height(200.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.outline,
+                                        RoundedCornerShape(8.dp)
+                                    ),
                                 contentScale = ContentScale.Crop
                             )
                         } else {
@@ -321,35 +332,54 @@ internal fun ListContent(
         uiState.isLoading -> {
             FullScreenLoadingIndicator()
         }
+
         uiState.errorMessage != null -> {
             ScreenErrorMessage(message = uiState.errorMessage, onRetry = onRefresh)
         }
+
         uiState.expenses.isEmpty() && !uiState.isLoading -> {
             EmptyStateView(
-                message = "No expenses recorded for ${DATE_FORMAT_SHORT_COMPONENTS.format(Date(uiState.selectedDate))}.\nTap the '+' button to add one!"
+                message = "No expenses recorded for ${
+                    formatDate(
+                        uiState.selectedDate,
+                        DatePatterns.SHORT_COMPONENTS
+                    )
+                }.\nTap the '+' button to add one!"
             )
         }
+
         else -> {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
             ) {
                 if (uiState.groupBy == GroupByOption.TIME) {
                     if (uiState.timeOfDayGroupedExpenses.values.all { it.isEmpty() } && uiState.expenses.isNotEmpty() && !uiState.isLoading) {
-                         item {
+                        item {
                             SectionTitle(
                                 text = "Could not group expenses by time of day. Displaying as list:",
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                             )
                         }
-                        itemsIndexed(uiState.expenses, key = { _, expense -> "fallback-time-${expense.id}" }) { index, expense ->
-                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, onItemClick, isScrolling = listState.isScrollInProgress)
+                        itemsIndexed(
+                            uiState.expenses,
+                            key = { _, expense -> "fallback-time-${expense.id}" }) { index, expense ->
+                            AnimatedExpenseListItem(
+                                expense,
+                                index,
+                                onDeleteExpense,
+                                onNavigateToExpenseEdit,
+                                onItemClick,
+                                isScrolling = listState.isScrollInProgress
+                            )
                         }
                     } else {
                         uiState.timeOfDayGroupedExpenses.forEach { (timeOfDay, expensesInTimeOfDay) ->
-                             if (expensesInTimeOfDay.isNotEmpty()) {
+                            if (expensesInTimeOfDay.isNotEmpty()) {
                                 item {
                                     Surface(
                                         modifier = Modifier.fillParentMaxWidth(),
@@ -357,23 +387,32 @@ internal fun ListContent(
                                         shadowElevation = 0.dp
                                     ) {
                                         Row(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 8.dp, vertical = 12.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            val (emoji, name) = getTimeOfDayHeaderPresentation(timeOfDay)
+                                            val (emoji, name) = getTimeOfDayHeaderPresentation(
+                                                timeOfDay
+                                            )
                                             Text(
                                                 text = emoji,
                                                 style = MaterialTheme.typography.titleMedium,
                                                 modifier = Modifier.padding(end = 8.dp)
                                             )
                                             SectionTitle(
-                                                text = "$name",
-                                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
+                                                text = name,
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
                                             )
                                         }
                                     }
                                 }
-                                itemsIndexed(expensesInTimeOfDay, key = { _, expense -> expense.id }) { index, expense ->
+                                itemsIndexed(
+                                    expensesInTimeOfDay,
+                                    key = { _, expense -> expense.id }) { index, expense ->
                                     AnimatedExpenseListItem(
                                         expense = expense,
                                         index = index,
@@ -389,28 +428,41 @@ internal fun ListContent(
                     }
                 } else { // GroupByOption.CATEGORY
                     if (uiState.groupedExpenses.isEmpty() && uiState.expenses.isNotEmpty() && !uiState.isLoading) {
-                         item {
-                             SectionTitle(
+                        item {
+                            SectionTitle(
                                 text = "Could not group expenses by category. Displaying as list:",
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
                             )
                         }
-                        itemsIndexed(uiState.expenses, key = { _, expense -> "fallback-category-${expense.id}" }) { index, expense ->
-                            AnimatedExpenseListItem(expense, index, onDeleteExpense, onNavigateToExpenseEdit, onItemClick, isScrolling = listState.isScrollInProgress)
+                        itemsIndexed(
+                            uiState.expenses,
+                            key = { _, expense -> "fallback-category-${expense.id}" }) { index, expense ->
+                            AnimatedExpenseListItem(
+                                expense,
+                                index,
+                                onDeleteExpense,
+                                onNavigateToExpenseEdit,
+                                onItemClick,
+                                isScrolling = listState.isScrollInProgress
+                            )
                         }
                     } else {
                         uiState.groupedExpenses.forEach { (category, expensesInCategory) ->
-                             if (expensesInCategory.isNotEmpty()) {
+                            if (expensesInCategory.isNotEmpty()) {
                                 item {
                                     Surface(
                                         modifier = Modifier.fillParentMaxWidth(),
                                         color = Color.Transparent,
                                         shadowElevation = 0.dp
                                     ) {
-                                        val (iconVector, iconTint) = getCategoryHeaderPresentation(category)
+                                        val (iconVector, iconTint) = getCategoryHeaderPresentation(
+                                            category
+                                        )
                                         Row(
-                                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 8.dp, vertical = 10.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Icon(
@@ -422,15 +474,22 @@ internal fun ListContent(
                                             Spacer(modifier = Modifier.width(8.dp))
                                             SectionTitle(
                                                 text = category.name.replaceFirstChar { nameChar ->
-                                                    if (nameChar.isLowerCase()) nameChar.titlecase(Locale.getDefault()) else nameChar.toString()
+                                                    if (nameChar.isLowerCase()) nameChar.titlecase(
+                                                        Locale.getDefault()
+                                                    ) else nameChar.toString()
                                                 },
-                                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium, color = iconTint)
+                                                style = MaterialTheme.typography.titleSmall.copy(
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = iconTint
+                                                )
                                             )
                                         }
                                     }
                                 }
-                                itemsIndexed(expensesInCategory, key = { _, expense -> expense.id }) { index, expense ->
-                                     AnimatedExpenseListItem(
+                                itemsIndexed(
+                                    expensesInCategory,
+                                    key = { _, expense -> expense.id }) { index, expense ->
+                                    AnimatedExpenseListItem(
                                         expense = expense,
                                         index = index,
                                         onDeleteClick = onDeleteExpense,
@@ -571,7 +630,7 @@ fun ExpenseListItem(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "₹${String.format("%.2f", expense.amount)}",
+                        text = CURRENCY_FORMATTER_INR.format(expense.amount),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
@@ -587,7 +646,11 @@ fun ExpenseListItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = expense.category.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                        text = expense.category.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(
+                                Locale.getDefault()
+                            ) else it.toString()
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -602,7 +665,7 @@ fun ExpenseListItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(expense.date)),
+                        text = formatDate(expense.date, DatePatterns.MEDIUM_DATETIME_DISPLAY),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -626,7 +689,9 @@ fun ExpenseListItem(
                                 val file = File(path)
                                 if (file.exists()) {
                                     BitmapFactory.decodeFile(file.absolutePath)?.asImageBitmap()
-                                } else { null }
+                                } else {
+                                    null
+                                }
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 null
@@ -646,7 +711,10 @@ fun ExpenseListItem(
                                 contentScale = ContentScale.Crop
                             )
                         } else {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
                                 Icon(
                                     imageVector = Icons.Filled.Photo,
                                     contentDescription = "Receipt image not available",
@@ -664,7 +732,7 @@ fun ExpenseListItem(
                     }
                 }
             }
-            Box{
+            Box {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "Options for expense: ${expense.title}",
@@ -694,7 +762,11 @@ fun ExpenseListItem(
                             showOptionsMenu = false
                         },
                         leadingIcon = {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete Expense", tint = MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Expense",
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     )
                 }
@@ -796,7 +868,14 @@ fun CustomGroupToggleSwitchCategorySelectedPreview() {
 @Composable
 fun AnimatedExpenseListItemPreview() {
     AnimatedExpenseListItem(
-        expense = Expense(id = 1, title = "Lunch Preview", amount = 12.75, category = CategoryType.FOOD.name, date = System.currentTimeMillis(), notes = "With colleagues"),
+        expense = Expense(
+            id = 1,
+            title = "Lunch Preview",
+            amount = 12.75,
+            category = CategoryType.FOOD.name,
+            date = System.currentTimeMillis(),
+            notes = "With colleagues"
+        ),
         index = 0,
         onDeleteClick = {},
         onEditClick = {},
@@ -808,7 +887,12 @@ fun AnimatedExpenseListItemPreview() {
 @Preview(showBackground = true, name = "ListContent - Loading")
 @Composable
 fun ListContentLoadingPreview() {
-    ListContent(uiState = ExpenseListUiState(isLoading = true), onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {})
+    ListContent(
+        uiState = ExpenseListUiState(isLoading = true),
+        onDeleteExpense = {},
+        onNavigateToExpenseEdit = {},
+        onItemClick = {},
+        onRefresh = {})
 }
 
 @Preview(showBackground = true, name = "ListContent - Empty (Time Group)")
@@ -847,10 +931,34 @@ fun ListContentWithDataTimePreview() {
     val cal = Calendar.getInstance()
     val now = System.currentTimeMillis()
 
-    val morningExpense = Expense(id = 1, title = "Coffee", amount = 4.50, category = CategoryType.FOOD.name, date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 9) }.timeInMillis)
-    val afternoonExpense = Expense(id = 2, title = "Lunch", amount = 12.50, category = CategoryType.FOOD.name, date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 13) }.timeInMillis)
-    val eveningExpense = Expense(id = 3, title = "Dinner", amount = 22.00, category = CategoryType.FOOD.name, date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 19) }.timeInMillis)
-    val anotherMorning = Expense(id = 4, title = "Breakfast Burrito", amount = 7.00, category = CategoryType.FOOD.name, date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 8) }.timeInMillis)
+    val morningExpense = Expense(
+        id = 1,
+        title = "Coffee",
+        amount = 4.50,
+        category = CategoryType.FOOD.name,
+        date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 9) }.timeInMillis
+    )
+    val afternoonExpense = Expense(
+        id = 2,
+        title = "Lunch",
+        amount = 12.50,
+        category = CategoryType.FOOD.name,
+        date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 13) }.timeInMillis
+    )
+    val eveningExpense = Expense(
+        id = 3,
+        title = "Dinner",
+        amount = 22.00,
+        category = CategoryType.FOOD.name,
+        date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 19) }.timeInMillis
+    )
+    val anotherMorning = Expense(
+        id = 4,
+        title = "Breakfast Burrito",
+        amount = 7.00,
+        category = CategoryType.FOOD.name,
+        date = cal.apply { timeInMillis = now; set(Calendar.HOUR_OF_DAY, 8) }.timeInMillis
+    )
 
 
     val allExpenses = listOf(morningExpense, afternoonExpense, eveningExpense, anotherMorning)
@@ -879,14 +987,45 @@ fun ListContentWithDataCategoryPreview() {
     val cal = Calendar.getInstance()
     val now = System.currentTimeMillis()
     val expensesList = listOf(
-        Expense(id = 1, title = "Pizza", amount = 20.0, category = CategoryType.FOOD.name, date = now),
-        Expense(id = 2, title = "Bus Ticket", amount = 2.50, category = CategoryType.TRAVEL.name, date = now - 10000),
-        Expense(id = 3, title = "Pens", amount = 5.0, category = CategoryType.STAFF.name, date = now - 20000),
-        Expense(id = 4, title = "Electricity Bill", amount = 50.0, category = CategoryType.UTILITY.name, date = now - 30000),
-        Expense(id = 5, title = "Groceries", amount = 30.0, category = CategoryType.FOOD.name, date = now - 40000)
+        Expense(
+            id = 1,
+            title = "Pizza",
+            amount = 20.0,
+            category = CategoryType.FOOD.name,
+            date = now
+        ),
+        Expense(
+            id = 2,
+            title = "Bus Ticket",
+            amount = 2.50,
+            category = CategoryType.TRAVEL.name,
+            date = now - 10000
+        ),
+        Expense(
+            id = 3,
+            title = "Pens",
+            amount = 5.0,
+            category = CategoryType.STAFF.name,
+            date = now - 20000
+        ),
+        Expense(
+            id = 4,
+            title = "Electricity Bill",
+            amount = 50.0,
+            category = CategoryType.UTILITY.name,
+            date = now - 30000
+        ),
+        Expense(
+            id = 5,
+            title = "Groceries",
+            amount = 30.0,
+            category = CategoryType.FOOD.name,
+            date = now - 40000
+        )
     )
-    val categoryGrouped = expensesList.groupBy { exp -> CategoryType.valueOf(exp.category.uppercase()) }
-        .mapValues { entry -> entry.value.sortedByDescending { it.date } }
+    val categoryGrouped =
+        expensesList.groupBy { exp -> CategoryType.valueOf(exp.category.uppercase()) }
+            .mapValues { entry -> entry.value.sortedByDescending { it.date } }
 
     ListContent(
         uiState = ExpenseListUiState(
@@ -905,7 +1044,10 @@ fun ListContentWithDataCategoryPreview() {
 @Composable
 fun ListContentErrorPreview() {
     ListContent(
-        uiState = ExpenseListUiState(isLoading = false, errorMessage = "Failed to load expenses. Please try again."),
+        uiState = ExpenseListUiState(
+            isLoading = false,
+            errorMessage = "Failed to load expenses. Please try again."
+        ),
         onDeleteExpense = {}, onNavigateToExpenseEdit = {}, onItemClick = {}, onRefresh = {}
     )
 }

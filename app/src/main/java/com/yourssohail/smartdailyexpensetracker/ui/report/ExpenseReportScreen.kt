@@ -20,9 +20,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.TableView
-// For stubs, Card and CardDefaults are used, so they should remain if stubs are used.
-// If DailyExpenseChartCard and ReportSectionCard are actual composables from another file, these might not be needed here.
-// For the provided code, the stubs DO use Card and CardDefaults.
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-// import androidx.compose.ui.graphics.Color // No longer needed directly if stubs are basic
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,10 +57,9 @@ import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
 import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
 import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
+import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
 import ir.ehsannarmani.compose_charts.models.Bars
 import kotlinx.coroutines.CoroutineScope
-// import kotlinx.coroutines.launch // No longer needed directly here
-import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -75,9 +70,6 @@ fun ExpenseReportScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val currencyFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-    }
 
     var showExportBottomSheet by remember { mutableStateOf(false) }
     var showShareOptionsBottomSheet by remember { mutableStateOf(false) }
@@ -114,13 +106,12 @@ fun ExpenseReportScreen(
     }
 
     val formattedTotalForAllCategories = remember(uiState.totalForAllCategories) {
-        currencyFormatter.format(uiState.totalForAllCategories)
+        CURRENCY_FORMATTER_INR.format(uiState.totalForAllCategories)
     }
 
     ExpenseReportScreenContent(
         uiState = uiState,
         formattedTotalForAllCategories = formattedTotalForAllCategories,
-        currencyFormatter = currencyFormatter,
         showExportBottomSheet = showExportBottomSheet,
         onDismissExportBottomSheet = { showExportBottomSheet = false },
         onExportCsvClicked = {
@@ -157,7 +148,6 @@ fun ExpenseReportScreen(
 private fun ExpenseReportScreenContent(
     uiState: ExpenseReportUiState,
     formattedTotalForAllCategories: String,
-    currencyFormatter: NumberFormat,
     showExportBottomSheet: Boolean,
     onDismissExportBottomSheet: () -> Unit,
     onExportCsvClicked: () -> Unit,
@@ -202,7 +192,7 @@ private fun ExpenseReportScreenContent(
                 uiState.errorMessage != null -> ScreenErrorMessage(
                     message = uiState.errorMessage,
                     onRetry = onRetry
-                ) // Removed !!
+                ) 
                 uiState.expensesOverLast7Days.isEmpty() && !useDummyDataForReport -> EmptyStateView(
                     message = "No expenses recorded in the last 7 days to generate a report."
                 )
@@ -270,7 +260,7 @@ private fun ExpenseReportScreenContent(
                                             style = MaterialTheme.typography.bodyLarge
                                         )
                                         Text(
-                                            currencyFormatter.format(categoryTotal.totalAmount),
+                                            CURRENCY_FORMATTER_INR.format(categoryTotal.totalAmount),
                                             style = MaterialTheme.typography.bodyLarge,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -294,7 +284,6 @@ private fun ExpenseReportScreenContent(
             if (showExportBottomSheet) {
                 ExportOptionsBottomSheet(
                     sheetState = exportSheetState,
-                    // scope = scope, // Removed as unused
                     onDismiss = onDismissExportBottomSheet,
                     onExportCsvClicked = onExportCsvClicked,
                     onExportPdfClicked = onExportPdfClicked
@@ -304,7 +293,6 @@ private fun ExpenseReportScreenContent(
             if (showShareOptionsBottomSheet) {
                 ShareReportOptionsBottomSheet(
                     sheetState = shareSheetState,
-                    // scope = scope, // Removed as unused
                     onDismiss = onDismissShareOptionsBottomSheet,
                     onSharePdfRequested = onSharePdfRequested,
                     onShareCsvRequested = onShareCsvRequested,
@@ -329,7 +317,6 @@ fun ExpenseReportScreenPreview_Populated() {
         CategoryTotal(CategoryType.TRAVEL, 170.0, 34f),
         CategoryTotal(CategoryType.STAFF, 30.0, 6f) // Assuming OTHER is valid
     )
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val sampleExpenses = emptyList<Expense>() // Corrected type
 
     MaterialTheme {
@@ -342,8 +329,7 @@ fun ExpenseReportScreenPreview_Populated() {
                 categoryTotals = sampleCategoryTotals,
                 totalForAllCategories = 500.0
             ),
-            formattedTotalForAllCategories = currencyFormatter.format(500.0),
-            currencyFormatter = currencyFormatter,
+            formattedTotalForAllCategories = CURRENCY_FORMATTER_INR.format(500.0),
             showExportBottomSheet = false,
             onDismissExportBottomSheet = {},
             onExportCsvClicked = {},
@@ -364,7 +350,6 @@ fun ExpenseReportScreenPreview_Populated() {
 @Preview(showBackground = true, name = "Expense Report - Empty")
 @Composable
 fun ExpenseReportScreenPreview_Empty() {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     MaterialTheme {
         ExpenseReportScreenContent(
             uiState = ExpenseReportUiState(
@@ -375,8 +360,7 @@ fun ExpenseReportScreenPreview_Empty() {
                 categoryTotals = emptyList(),
                 totalForAllCategories = 0.0
             ),
-            formattedTotalForAllCategories = currencyFormatter.format(0.0),
-            currencyFormatter = currencyFormatter,
+            formattedTotalForAllCategories = CURRENCY_FORMATTER_INR.format(0.0),
             showExportBottomSheet = false,
             onDismissExportBottomSheet = {},
             onExportCsvClicked = {},
@@ -397,12 +381,10 @@ fun ExpenseReportScreenPreview_Empty() {
 @Preview(showBackground = true, name = "Expense Report - Loading")
 @Composable
 fun ExpenseReportScreenPreview_Loading() {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     MaterialTheme {
         ExpenseReportScreenContent(
             uiState = ExpenseReportUiState(isLoading = true),
-            formattedTotalForAllCategories = currencyFormatter.format(0.0),
-            currencyFormatter = currencyFormatter,
+            formattedTotalForAllCategories = CURRENCY_FORMATTER_INR.format(0.0),
             showExportBottomSheet = false,
             onDismissExportBottomSheet = {},
             onExportCsvClicked = {},
@@ -423,12 +405,10 @@ fun ExpenseReportScreenPreview_Loading() {
 @Preview(showBackground = true, name = "Expense Report - Error")
 @Composable
 fun ExpenseReportScreenPreview_Error() {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     MaterialTheme {
         ExpenseReportScreenContent(
             uiState = ExpenseReportUiState(errorMessage = "Failed to load report data. Please try again."),
-            formattedTotalForAllCategories = currencyFormatter.format(0.0),
-            currencyFormatter = currencyFormatter,
+            formattedTotalForAllCategories = CURRENCY_FORMATTER_INR.format(0.0),
             showExportBottomSheet = false,
             onDismissExportBottomSheet = {},
             onExportCsvClicked = {},
@@ -449,7 +429,6 @@ fun ExpenseReportScreenPreview_Error() {
 @Preview(showBackground = true, name = "Expense Report - With Export Sheet")
 @Composable
 fun ExpenseReportScreenPreview_WithExportSheet() {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     MaterialTheme {
         ExpenseReportScreenContent(
             uiState = ExpenseReportUiState(
@@ -461,8 +440,7 @@ fun ExpenseReportScreenPreview_WithExportSheet() {
                     )
                 )
             ),
-            formattedTotalForAllCategories = currencyFormatter.format(10.0),
-            currencyFormatter = currencyFormatter,
+            formattedTotalForAllCategories = CURRENCY_FORMATTER_INR.format(10.0),
             showExportBottomSheet = true,
             onDismissExportBottomSheet = {},
             onExportCsvClicked = {},
