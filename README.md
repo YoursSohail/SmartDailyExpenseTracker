@@ -41,11 +41,17 @@ Below are a few examples of key prompts used during development. For a more comp
     *   **Effectiveness:** Set the stage for project structure and initial task breakdown by the in-IDE AI (Gemini).
 
 2.  **Refactoring with Common UI Components (Gemini):**
-    *   **Initial Prompt:** "Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+    *   **Initial Prompt:**
+    ```
+      Let's create a new file at `app/src/main/java/com/yourssohail/smartdailyexpensetracker/ui/common/CommonUIComponents.kt` and add a `FullScreenLoadingIndicator` composable. It should be a `Box` composable that fills the max size and centers a `CircularProgressIndicator`."
+      ```
     *   **Effectiveness:** Led to the AI-assisted creation of reusable UI elements and improved code maintainability across multiple screens.
 
 3.  **Addressing API Level Compatibility for File Saving (`MediaStore`) (Gemini):**
-    *   **User Prompt (identifying issue):** "`val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`"
+    *   **User Prompt (identifying issue):** 
+    ```
+    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)` error: Field requires API level 29 (current min is 24): `android.provider.MediaStore.Downloads#EXTERNAL_CONTENT_URI`
+      ```
     *   **Effectiveness:** Resulted in AI-generated code that correctly handles file saving to the Downloads directory across different Android versions.
 
 ## Checklist of Features Implemented
