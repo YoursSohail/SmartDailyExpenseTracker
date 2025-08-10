@@ -68,6 +68,8 @@ class ExpenseReportViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     private val reportDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
+    private val csvDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     private val fileTimestampFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
     private val shortDateFormat = SimpleDateFormat("dd/MM", Locale.getDefault())
     private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
@@ -306,12 +308,12 @@ class ExpenseReportViewModel @Inject constructor(
     private fun generateCsvContent(expenses: List<Expense>): String {
         val csvBuilder = StringBuilder()
         // CSV Header
-        csvBuilder.appendLine("\"ID\",\"Date\",\"Title\",\"Amount\",\"Category\",\"Notes\"")
+        csvBuilder.appendLine("\"Date\",\"Title\",\"Amount\",\"Category\",\"Notes\"")
         expenses.forEach { expense ->
-            val dateString = reportDateFormat.format(Date(expense.date))
+            val dateString = csvDateFormat.format(Date(expense.date))
             val title = expense.title.replace("\"", "\"\"") // Escape double quotes
             val notes = expense.notes?.replace("\"", "\"\"") ?: "" // Escape double quotes, handle null
-            csvBuilder.appendLine("\"${expense.id}\",\"$dateString\",\"$title\",\"${expense.amount}\",\"${expense.category}\",\"$notes\"")
+            csvBuilder.appendLine("\"$dateString\",\"$title\",\"${expense.amount}\",\"${expense.category}\",\"$notes\"")
         }
         return csvBuilder.toString()
     }

@@ -162,7 +162,7 @@ private fun ExpenseListScreenContent(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Total transactions - $totalExpenseCount",
+                            text = "Total transactions: $totalExpenseCount",
                             style = MaterialTheme.typography.bodySmall, // Smaller style
                             color = MaterialTheme.colorScheme.onSurfaceVariant // Subdued color
                         )
