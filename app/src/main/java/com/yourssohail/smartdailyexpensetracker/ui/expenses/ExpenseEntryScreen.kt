@@ -27,11 +27,10 @@ import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button // This will be unused now, but let's keep it for now, can be removed by optimize imports later
+// import androidx.compose.material3.Button // No longer directly used by top-level screen logic if ProgressButton is self-contained
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-// import androidx.compose.material3.CircularProgressIndicator // This will be unused directly here
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -54,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -61,9 +61,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.yourssohail.smartdailyexpensetracker.ui.common.ProgressButton // Added import
+import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.ui.common.ProgressButton
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import java.io.File
 import java.io.FileInputStream
@@ -78,7 +80,7 @@ fun ExpenseEntryScreen(
     onExpenseSaved: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    val context = LocalContext.current // For Toast
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -110,14 +112,52 @@ fun ExpenseEntryScreen(
         }
     }
 
+    ExpenseEntryScreenContent(
+        uiState = uiState,
+        categories = viewModel.categories,
+        onTitleChange = viewModel::onTitleChange,
+        onAmountChange = viewModel::onAmountChange,
+        onCategoryChange = viewModel::onCategoryChange,
+        onDateChange = viewModel::onDateChange,
+        onNotesChange = viewModel::onNotesChange,
+        onRemoveReceiptImage = viewModel::onRemoveReceiptImage,
+        onSaveExpense = viewModel::saveExpense,
+        onForceSaveExpense = viewModel::forceSaveExpense,
+        onDismissDuplicateWarning = viewModel::dismissDuplicateWarning,
+        onCloseScreen = onExpenseSaved, // Top bar close icon action
+        onLaunchImagePicker = { imagePickerLauncher.launch("image/*") }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExpenseEntryScreenContent(
+    uiState: ExpenseEntryUiState,
+    categories: List<CategoryType>,
+    onTitleChange: (String) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onCategoryChange: (CategoryType) -> Unit,
+    onDateChange: (Long) -> Unit,
+    onNotesChange: (String) -> Unit,
+    onRemoveReceiptImage: () -> Unit,
+    onSaveExpense: () -> Unit,
+    onForceSaveExpense: () -> Unit,
+    onDismissDuplicateWarning: () -> Unit,
+    onCloseScreen: () -> Unit,
+    onLaunchImagePicker: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current // For DatePickerDialog and Image loading
+
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
                     Text(if (uiState.isEditMode) "Edit Expense" else "Add New Expense")
                 },
                 navigationIcon = {
-                    IconButton(onClick = onExpenseSaved) {
+                    IconButton(onClick = onCloseScreen) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Close"
@@ -135,7 +175,6 @@ fun ExpenseEntryScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Display Total Spent Today
             Text(
                 text = "Total Spent Today: ${uiState.totalSpentToday}",
                 style = MaterialTheme.typography.headlineSmall,
@@ -147,7 +186,7 @@ fun ExpenseEntryScreen(
 
             OutlinedTextField(
                 value = uiState.title,
-                onValueChange = viewModel::onTitleChange,
+                onValueChange = onTitleChange,
                 label = { Text("Title") },
                 isError = uiState.titleError != null,
                 singleLine = true,
@@ -160,7 +199,7 @@ fun ExpenseEntryScreen(
 
             OutlinedTextField(
                 value = uiState.amount,
-                onValueChange = viewModel::onAmountChange,
+                onValueChange = onAmountChange,
                 label = { Text("Amount (₹)") },
                 isError = uiState.amountError != null,
                 singleLine = true,
@@ -192,11 +231,11 @@ fun ExpenseEntryScreen(
                     expanded = categoryExpanded,
                     onDismissRequest = { categoryExpanded = false }
                 ) {
-                    viewModel.categories.forEach { category ->
+                    categories.forEach { category ->
                         DropdownMenuItem(
                             text = { Text(category.name) },
                             onClick = {
-                                viewModel.onCategoryChange(category)
+                                onCategoryChange(category)
                                 categoryExpanded = false
                             }
                         )
@@ -217,7 +256,7 @@ fun ExpenseEntryScreen(
                 context,
                 { _, selectedYear, selectedMonth, selectedDayOfMonth ->
                     val newCal = Calendar.getInstance().apply { set(selectedYear, selectedMonth, selectedDayOfMonth) }
-                    viewModel.onDateChange(newCal.timeInMillis)
+                    onDateChange(newCal.timeInMillis)
                 }, year, month, day
             )
 
@@ -232,7 +271,7 @@ fun ExpenseEntryScreen(
 
             OutlinedTextField(
                 value = uiState.notes,
-                onValueChange = viewModel::onNotesChange,
+                onValueChange = onNotesChange,
                 label = { Text("Optional Notes (max 100)") },
                 isError = uiState.notesError != null,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp),
@@ -243,14 +282,13 @@ fun ExpenseEntryScreen(
                 Text(uiState.notesError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             }
 
-            // --- Receipt Image Section ---
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
                 SectionTitle(text = "Receipt Image (Optional)", style = MaterialTheme.typography.labelLarge)
                 Spacer(Modifier.height(8.dp))
 
                 if (uiState.selectedReceiptUri == null) {
                     OutlinedButton(
-                        onClick = { imagePickerLauncher.launch("image/*") },
+                        onClick = onLaunchImagePicker,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Filled.AddPhotoAlternate, contentDescription = "Add Receipt Icon", modifier = Modifier.size(ButtonDefaults.IconSize))
@@ -263,7 +301,7 @@ fun ExpenseEntryScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val imageBitmap = remember(uiState.selectedReceiptUri) {
+                        val imageBitmap: ImageBitmap? = remember(uiState.selectedReceiptUri) {
                             uiState.selectedReceiptUri?.let { uriString ->
                                 try {
                                     val uri = Uri.parse(uriString)
@@ -271,7 +309,7 @@ fun ExpenseEntryScreen(
                                         context.contentResolver.openInputStream(uri)?.use { inputStream ->
                                             BitmapFactory.decodeStream(inputStream)?.asImageBitmap()
                                         }
-                                    } else { // Assumed to be a file path
+                                    } else { 
                                         val file = File(uriString)
                                         if (file.exists()) {
                                             FileInputStream(file).use { inputStream ->
@@ -281,7 +319,7 @@ fun ExpenseEntryScreen(
                                     }
                                 } catch (e: Exception) {
                                     e.printStackTrace()
-                                    null // Handle error by returning null
+                                    null 
                                 }
                             }
                         }
@@ -306,7 +344,7 @@ fun ExpenseEntryScreen(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        IconButton(onClick = viewModel::onRemoveReceiptImage) {
+                        IconButton(onClick = onRemoveReceiptImage) {
                             Icon(Icons.Filled.Clear, contentDescription = "Remove Receipt Image")
                         }
                     }
@@ -317,7 +355,6 @@ fun ExpenseEntryScreen(
                     Text(uiState.receiptImageError!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 }
             }
-            // --- End of Receipt Image Section ---
 
             if (uiState.isDuplicateWarningVisible) {
                 Card(
@@ -332,10 +369,10 @@ fun ExpenseEntryScreen(
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
-                            OutlinedButton(onClick = viewModel::dismissDuplicateWarning) { 
+                            OutlinedButton(onClick = onDismissDuplicateWarning) {
                                 Text("Cancel")
                             }
-                            androidx.compose.material3.Button(onClick = viewModel::forceSaveExpense) {
+                            androidx.compose.material3.Button(onClick = onForceSaveExpense) { // Kept explicit Button for "Save Anyway" as it's not the primary save
                                 Text("Save Anyway")
                             }
                         }
@@ -345,11 +382,76 @@ fun ExpenseEntryScreen(
 
             ProgressButton(
                 text = if (uiState.isEditMode) "Update Expense" else "Save Expense",
-                onClick = viewModel::saveExpense,
+                onClick = onSaveExpense,
                 isLoading = uiState.isLoading,
                 enabled = uiState.isSaveEnabled && !uiState.isDuplicateWarningVisible,
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, name = "Expense Entry Add Mode")
+@Composable
+fun ExpenseEntryScreenPreview() {
+    MaterialTheme { // Assuming you have a Theme wrapper for previews
+        ExpenseEntryScreenContent(
+            uiState = ExpenseEntryUiState(
+                title = "Lunch",
+                amount = "120.50",
+                selectedCategory = CategoryType.FOOD,
+                notes = "Had a great lunch with colleagues.",
+                date = System.currentTimeMillis(),
+                totalSpentToday = "₹550.75",
+                isEditMode = false,
+                receiptFileName = "receipt_lunch.jpg",
+//                selectedReceiptUri = "content://path/to/receipt_lunch.jpg" // Example URI - causes issues in preview if not resolvable
+            ),
+            categories = CategoryType.entries.toList(),
+            onTitleChange = {},
+            onAmountChange = {},
+            onCategoryChange = {},
+            onDateChange = {},
+            onNotesChange = {},
+            onRemoveReceiptImage = {},
+            onSaveExpense = {},
+            onForceSaveExpense = {},
+            onDismissDuplicateWarning = {},
+            onCloseScreen = {},
+            onLaunchImagePicker = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true, name = "Expense Entry Edit Mode with Duplicate Warning")
+@Composable
+fun ExpenseEntryScreenEditModePreview() {
+    MaterialTheme {
+        ExpenseEntryScreenContent(
+            uiState = ExpenseEntryUiState(
+                title = "Dinner",
+                amount = "300.00",
+                selectedCategory = CategoryType.FOOD,
+                notes = "Team dinner",
+                date = System.currentTimeMillis() - (1000 * 60 * 60 * 24), // Yesterday
+                totalSpentToday = "₹550.75",
+                isEditMode = true,
+                isDuplicateWarningVisible = true
+            ),
+            categories = CategoryType.entries.toList(),
+            onTitleChange = {},
+            onAmountChange = {},
+            onCategoryChange = {},
+            onDateChange = {},
+            onNotesChange = {},
+            onRemoveReceiptImage = {},
+            onSaveExpense = {},
+            onForceSaveExpense = {},
+            onDismissDuplicateWarning = {},
+            onCloseScreen = {},
+            onLaunchImagePicker = {}
+        )
     }
 }

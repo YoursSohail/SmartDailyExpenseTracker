@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -30,6 +31,13 @@ fun FullScreenLoadingIndicator(modifier: Modifier = Modifier) {
         CircularProgressIndicator()
     }
 }
+
+@Preview
+@Composable
+fun FullScreenLoadingIndicatorPreview() {
+    FullScreenLoadingIndicator()
+}
+
 
 @Composable
 fun ScreenErrorMessage(
@@ -63,6 +71,21 @@ fun ScreenErrorMessage(
     }
 }
 
+@Preview
+@Composable
+fun ScreenErrorMessagePreview() {
+    ScreenErrorMessage(message = "An error occurred.")
+}
+
+@Preview
+@Composable
+fun ScreenErrorMessageWithRetryPreview() {
+    ScreenErrorMessage(
+        message = "An error occurred. Please try again.",
+        onRetry = {}
+    )
+}
+
 @Composable
 fun EmptyStateView(message: String, modifier: Modifier = Modifier) {
     Box(
@@ -80,6 +103,12 @@ fun EmptyStateView(message: String, modifier: Modifier = Modifier) {
     }
 }
 
+@Preview
+@Composable
+fun EmptyStateViewPreview() {
+    EmptyStateView(message = "No items to display.")
+}
+
 @Composable
 fun SectionTitle(
     text: String,
@@ -91,6 +120,12 @@ fun SectionTitle(
         style = style,
         modifier = modifier
     )
+}
+
+@Preview
+@Composable
+fun SectionTitlePreview() {
+    SectionTitle(text = "Section Title")
 }
 
 @Composable
@@ -117,3 +152,25 @@ fun ProgressButton(
         }
     }
 }
+
+@Preview
+@Composable
+fun ProgressButtonPreview() {
+    ProgressButton(text = "Submit", onClick = {})
+}
+
+@Preview
+@Composable
+fun ProgressButtonLoadingPreview() {
+    ProgressButton(text = "Submit", onClick = {}, isLoading = true)
+}
+
+@Preview
+@Composable
+fun ProgressButtonDisabledPreview() {
+    ProgressButton(text = "Submit", onClick = {}, enabled = false)
+}
+
+
+
+

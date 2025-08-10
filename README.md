@@ -54,6 +54,10 @@ Below are a few examples of key prompts used during development. For a more comp
       ```
     *   **Effectiveness:** Resulted in AI-generated code that correctly handles file saving to the Downloads directory across different Android versions.
 
+4.  **Reusable `ProgressButton` Creation (Gemini):**
+    *   **User Prompt (summarized):** "Let's proceed with developing the `ProgressButton`... Add it to `CommonUIComponents.kt` and then integrate it into the `ExpenseEntryScreen.kt` save button."
+    *   **Effectiveness:** AI-assisted creation of a reusable `ProgressButton` and its integration, improving UI feedback.
+
 ## Checklist of Features Implemented
 
 *   [x] **Expense Logging:** Easily add new expenses with details such as title, amount, category, date, and optional notes.

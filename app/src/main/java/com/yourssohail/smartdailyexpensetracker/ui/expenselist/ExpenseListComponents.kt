@@ -3,6 +3,7 @@ package com.yourssohail.smartdailyexpensetracker.ui.expenselist
 import android.app.DatePickerDialog
 import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,8 +31,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
@@ -317,70 +321,75 @@ fun CustomGroupToggleSwitch(
     modifier: Modifier = Modifier
 ) {
     val trackHeight = 32.dp
-    val trackWidth = 64.dp
-    val thumbDiameter = trackHeight
-    val padding = 6.dp 
+    val segmentWidth = 48.dp
 
-    val isGroupedByTime = currentOption == GroupByOption.TIME
-
-    val thumbOffset: Dp by animateDpAsState(
-        targetValue = if (isGroupedByTime) padding else trackWidth - thumbDiameter + padding,
-        label = "thumbOffset"
-    )
-
-    Box( 
-        modifier = modifier 
-            .width(trackWidth + padding * 2)
+    Row(
+        modifier = modifier
             .height(trackHeight)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-            .clickable {
-                onOptionSelected(
-                    if (isGroupedByTime) GroupByOption.CATEGORY else GroupByOption.TIME
-                )
-            }
-            .padding(horizontal = padding), 
-        contentAlignment = Alignment.CenterStart 
+            .width(segmentWidth * 2)
+            .clip(RoundedCornerShape(50))
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(50))
     ) {
-        
-        Row(
-            modifier = Modifier.matchParentSize(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween 
+        // Left segment (Category)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(
+                    if (currentOption == GroupByOption.CATEGORY)
+                        MaterialTheme.colorScheme.surface
+                    else
+                        Color.Transparent
+                )
+                .clickable { onOptionSelected(GroupByOption.CATEGORY) },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Category,
+                modifier = Modifier.size(20.dp),
+                contentDescription = "Group by Category",
+                tint = if (currentOption == GroupByOption.CATEGORY)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        }
+
+        // Divider
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.outline)
+        )
+
+        // Right segment (Time)
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .background(
+                    if (currentOption == GroupByOption.TIME)
+                        MaterialTheme.colorScheme.surface
+                    else
+                        Color.Transparent
+                )
+                .clickable { onOptionSelected(GroupByOption.TIME) },
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.Schedule,
                 contentDescription = "Group by Time",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (isGroupedByTime) 0f else 0.7f), 
-                modifier = Modifier.size(thumbDiameter - padding * 2)
-            )
-            Icon(
-                imageVector = Icons.Filled.Category,
-                contentDescription = "Group by Category",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (!isGroupedByTime) 0f else 0.7f), 
-                modifier = Modifier.size(thumbDiameter - padding * 2)
-            )
-        }
-
-        
-        Box(
-            modifier = Modifier
-                .offset(x = thumbOffset - padding) 
-                .size(thumbDiameter)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = if (isGroupedByTime) Icons.Filled.Schedule else Icons.Filled.Category,
-                contentDescription = if (isGroupedByTime) "Currently grouping by Time" else "Currently grouping by Category",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(thumbDiameter - padding * 2) 
+                modifier = Modifier.size(20.dp),
+                tint = if (currentOption == GroupByOption.TIME)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
         }
     }
 }
+
 
 @Composable
 fun ExpenseListItem(

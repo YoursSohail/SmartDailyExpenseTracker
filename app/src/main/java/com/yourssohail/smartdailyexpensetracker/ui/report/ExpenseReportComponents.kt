@@ -2,16 +2,27 @@ package com.yourssohail.smartdailyexpensetracker.ui.report
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TextSnippet
+import androidx.compose.material.icons.outlined.PictureAsPdf
+import androidx.compose.material.icons.outlined.TableView
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -110,6 +121,80 @@ fun DailyExpenseChartCard(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExportOptionsBottomSheet(
+    sheetState: SheetState,
+    // scope: CoroutineScope, // Removed
+    onDismiss: () -> Unit,
+    onExportCsvClicked: () -> Unit,
+    onExportPdfClicked: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(modifier = Modifier.padding(bottom = 16.dp)) {
+            ListItem(
+                headlineContent = { Text("Export as CSV") },
+                leadingContent = { Icon(Icons.Outlined.TableView, "Export as CSV") },
+                modifier = Modifier.clickable {
+                    onExportCsvClicked()
+                }
+            )
+            ListItem(
+                headlineContent = { Text("Export as PDF") },
+                leadingContent = { Icon(Icons.Outlined.PictureAsPdf, "Export as PDF") },
+                modifier = Modifier.clickable {
+                    onExportPdfClicked()
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShareReportOptionsBottomSheet(
+    sheetState: SheetState,
+    // scope: CoroutineScope, // Removed
+    onDismiss: () -> Unit,
+    onSharePdfRequested: () -> Unit,
+    onShareCsvRequested: () -> Unit,
+    onShareTextRequested: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+    ) {
+        Column(modifier = Modifier.padding(bottom = 16.dp)) {
+            ListItem(
+                headlineContent = { Text("Share as PDF") },
+                leadingContent = { Icon(Icons.Outlined.PictureAsPdf, "Share as PDF") },
+                modifier = Modifier.clickable { onSharePdfRequested() }
+            )
+            ListItem(
+                headlineContent = { Text("Share as CSV") },
+                leadingContent = { Icon(Icons.Outlined.TableView, "Share as CSV") },
+                modifier = Modifier.clickable { onShareCsvRequested() }
+            )
+            ListItem(
+                headlineContent = { Text("Share as Text") },
+                leadingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.TextSnippet,
+                        "Share as Text"
+                    )
+                }, // Updated Icon
+                modifier = Modifier.clickable { onShareTextRequested() }
+            )
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
