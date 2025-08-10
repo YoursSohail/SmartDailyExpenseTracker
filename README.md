@@ -118,6 +118,11 @@ Below are a few examples of key prompts used during development. For a more comp
   <img src="./screenshots/dark/Screenshot_20250810_175714_Expense%20Buddy.jpg" alt="Dark Mode Screenshot 4" width="200" height="400"/>
 </p>
 
+## Demo Video
+
+[Link to Demo Video](./demo.mp4)
+
+
 ## Resume
 
 [Link to my resume](./resume.pdf)
