@@ -8,7 +8,7 @@ Expense Buddy is an Android application built with Jetpack Compose that helps us
 
 ## AI Usage Summary
 
-This project involved the use of multiple AI tools:
+This project involved the use of multiple AI tools. While other AI coding assistants like WindSurf and Cursor were explored during the initial phases, the primary AI tools used for development were ChatGPT for initial brainstorming and the Gemini AI assistant integrated within Android Studio for the bulk of the coding and refactoring tasks.
 
 *   **ChatGPT** was utilized for:
     *   Initial brainstorming and generation of the `requirements.md` file.
@@ -63,7 +63,7 @@ Below are a few examples of key prompts used during development.
     *   **Effectiveness:** This led to better organization of the `ExpenseListScreen`'s UI logic, separating the main screen structure from its more granular, list-related components, improving readability and maintainability.
 
 5.  **Batch KDoc Documentation (Gemini):**
-    *   **Initial Prompt:**
+    *   **Prompt:**
         ```
         Add docstring to all the methods for:
         - Use case files
@@ -114,6 +114,8 @@ Below are a few examples of key prompts used during development.
 *   [x] **Data Persistence:** Expenses and settings are saved locally using Room and DataStore.
 *   [x] **Modern UI:** Built entirely with Jetpack Compose, following Material 3 guidelines.
 *   [x] **Offline First:** (Mocked) Designed with offline usability in mind.
+*   [x] **Animations:** Implemented animations for adding expenses and list interactions.
+*   [x] **Reusable UI Components:** Developed and integrated common UI elements for consistency and maintainability.
 
 ## APK Download Link
 
