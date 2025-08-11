@@ -122,7 +122,7 @@ private fun ExpenseListScreenContent(
     onGroupByChanged: (GroupByOption) -> Unit,
     onDeleteExpense: (Expense) -> Unit,
     onRefreshData: () -> Unit,
-    onExpenseItemClick: (Expense) -> Unit, // Added parameter
+    onExpenseItemClick: (Expense) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -189,7 +189,7 @@ private fun ExpenseListScreenContent(
                 uiState = uiState,
                 onDeleteExpense = onDeleteExpense,
                 onNavigateToExpenseEdit = onNavigateToExpenseEdit,
-                onItemClick = onExpenseItemClick, // Passed down
+                onItemClick = onExpenseItemClick,
                 onRefresh = onRefreshData
             )
         }
@@ -203,7 +203,7 @@ fun ExpenseListScreenPreview_Category() {
     val sampleExpenses = listOf(
         Expense(id = 1L, title = "Lunch", amount = 150.0, category = CategoryType.FOOD.name, date = currentTime, notes = "notes 1"),
         Expense(id = 2L, title = "Coffee", amount = 50.0, category = CategoryType.FOOD.name, date = currentTime - 10000, notes = "notes 2"),
-        Expense(id = 3L, title = "Movie Ticket", amount = 300.0, category = CategoryType.TRAVEL.name, date = currentTime - 20000, notes = "notes 3") // Assuming ENTERTAINMENT is a valid CategoryType
+        Expense(id = 3L, title = "Movie Ticket", amount = 300.0, category = CategoryType.TRAVEL.name, date = currentTime - 20000, notes = "notes 3")
     )
     val sampleGroupedExpenses: Map<CategoryType, List<Expense>> = mapOf(
         CategoryType.FOOD to sampleExpenses.filter { it.category == CategoryType.FOOD.name },

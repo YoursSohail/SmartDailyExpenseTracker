@@ -289,22 +289,37 @@ private fun ExpenseEntryScreenContent(
 
             OutlinedTextField(
                 value = uiState.notes,
-                onValueChange = onNotesChange,
-                label = { Text("Optional Notes (max 100)") },
+                onValueChange = { newText ->
+                    if (newText.length <= 100) {
+                        onNotesChange(newText)
+                    }
+                },
+                label = { Text("Optional Notes") },
                 isError = uiState.notesError != null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 80.dp),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                maxLines = 3
+                maxLines = 3,
+                supportingText = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "${uiState.notes.length}/100",
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        if (uiState.notesError != null) {
+                            Text(
+                                text = uiState.notesError,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
             )
-            if (uiState.notesError != null) {
-                Text(
-                    uiState.notesError,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
 
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
                 SectionTitle(

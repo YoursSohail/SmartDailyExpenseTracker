@@ -1,8 +1,7 @@
 package com.yourssohail.smartdailyexpensetracker.data.mapper
 
-import com.yourssohail.smartdailyexpensetracker.data.local.entity.ExpenseEntity as DataExpenseEntity // Updated import
 import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
-import kotlin.collections.map
+import com.yourssohail.smartdailyexpensetracker.data.local.entity.ExpenseEntity as DataExpenseEntity
 
 fun DataExpenseEntity.toDomain(): Expense {
     return Expense(

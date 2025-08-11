@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class ExpenseRepositoryImpl @Inject constructor(
     private val expenseDao: ExpenseDao
-) : ExpenseRepository { // Implements domain repository
+) : ExpenseRepository {
 
     override suspend fun insertExpense(expense: Expense): Long {
         return expenseDao.insertExpense(expense.toDataEntity())

@@ -1,8 +1,8 @@
 package com.yourssohail.smartdailyexpensetracker.domain.usecase
 
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense 
 import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository
-import javax.inject.Inject // Assuming DI
+import javax.inject.Inject 
 
 /**
  * Use case for adding a new expense.
@@ -19,7 +19,6 @@ class AddExpenseUseCase @Inject constructor(
      * @throws IllegalArgumentException if the expense title is blank or the amount is not positive.
      */
     suspend operator fun invoke(expense: Expense): Long {
-        // Basic validation (can be expanded or moved to a dedicated ValidateExpenseUseCase later)
         if (expense.title.isBlank()) {
             throw IllegalArgumentException("Expense title cannot be blank.")
         }

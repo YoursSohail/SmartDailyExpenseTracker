@@ -599,7 +599,7 @@ fun ExpenseListItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp)
-            .clickable { onItemClick(expense) }, // Added clickable here
+            .clickable { onItemClick(expense) },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {

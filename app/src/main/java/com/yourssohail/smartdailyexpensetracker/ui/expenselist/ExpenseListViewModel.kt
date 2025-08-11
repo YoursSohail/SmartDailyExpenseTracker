@@ -2,7 +2,7 @@ package com.yourssohail.smartdailyexpensetracker.ui.expenselist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense 
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.DeleteExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.GetDailyTotalUseCase
@@ -220,7 +220,6 @@ class ExpenseListViewModel @Inject constructor(
             try {
                 CategoryType.valueOf(expense.category.uppercase())
             } catch (e: IllegalArgumentException) {
-                // Consider logging this or handling it more robustly if unknown categories are common
                 println("Warning: Unknown category '${expense.category}' for expense ID ${expense.id}. Grouping under FOOD as fallback.")
                 CategoryType.FOOD // Fallback or a specific 'UNKNOWN' category
             }

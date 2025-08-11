@@ -5,9 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.yourssohail.smartdailyexpensetracker.data.local.dao.ExpenseDao
-import com.yourssohail.smartdailyexpensetracker.data.local.entity.ExpenseEntity // Updated import
+import com.yourssohail.smartdailyexpensetracker.data.local.entity.ExpenseEntity
 
-@Database(entities = [ExpenseEntity::class], version = 1, exportSchema = false) // Updated entity
+@Database(entities = [ExpenseEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     /**

@@ -2,6 +2,7 @@ package com.yourssohail.smartdailyexpensetracker.ui.expenses
 
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -198,7 +199,6 @@ class ExpenseEntryViewModel @Inject constructor(
      */
     fun onDateChange(newDate: Long) {
         _uiState.update { it.copy(date = newDate, isDuplicateWarningVisible = false) }
-        // Date change might affect duplicate check, but save button status is not directly dependent on date itself
     }
 
     /**
@@ -227,7 +227,7 @@ class ExpenseEntryViewModel @Inject constructor(
         val amountDouble = uiState.value.amount.toDoubleOrNull()
         val amountResult = validateExpenseUseCase.validateAmount(amountDouble)
         // Category is validated for non-null directly
-        val notesResult = validateExpenseUseCase.validateNotes(uiState.value.notes) // Assuming notes has max length
+        val notesResult = validateExpenseUseCase.validateNotes(uiState.value.notes)
 
         val newTitleError = if (titleResult is ValidationResult.Error) titleResult.message else null
         val newAmountError = if (amountResult is ValidationResult.Error) amountResult.message else null
@@ -256,18 +256,17 @@ class ExpenseEntryViewModel @Inject constructor(
      * @return The absolute path to the saved image file in internal storage, or null if saving failed.
      */
     private suspend fun saveReceiptImageToInternalStorage(uriString: String): String? {
-        // If the uriString is already an absolute path within our app's files dir, assume it's the existing one or already copied.
         if (File(uriString).exists() && uriString.startsWith(applicationContext.filesDir.absolutePath)) {
             return uriString
         }
 
         return withContext(Dispatchers.IO) {
             try {
-                val inputStream = applicationContext.contentResolver.openInputStream(Uri.parse(uriString))
+                val inputStream = applicationContext.contentResolver.openInputStream(uriString.toUri())
                 val receiptsDir = File(applicationContext.filesDir, "receipts")
                 if (!receiptsDir.exists()) { receiptsDir.mkdirs() }
 
-                val extension = getFileExtension(applicationContext, Uri.parse(uriString)) ?: "jpg" // default to jpg
+                val extension = getFileExtension(applicationContext, uriString.toUri()) ?: "jpg" // default to jpg
                 val fileName = "${UUID.randomUUID()}.$extension" // Create a unique file name
                 val outputFile = File(receiptsDir, fileName)
 

@@ -1,10 +1,10 @@
 package com.yourssohail.smartdailyexpensetracker.domain.usecase
 
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense 
 import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository
 import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
-import javax.inject.Inject // Assuming DI
+import javax.inject.Inject 
 
 /**
  * Use case for retrieving expenses from the last 7 days, including today.

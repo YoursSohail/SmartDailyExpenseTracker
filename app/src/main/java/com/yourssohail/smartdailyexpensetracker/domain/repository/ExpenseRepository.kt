@@ -1,6 +1,6 @@
 package com.yourssohail.smartdailyexpensetracker.domain.repository
 
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense 
 import kotlinx.coroutines.flow.Flow
 
 interface ExpenseRepository {
