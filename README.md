@@ -119,7 +119,7 @@ Below are a few examples of key prompts used during development.
 
 ## APK Download Link
 
-[Download Expense Buddy APK](https://drive.google.com/file/d/17RKqPzJRXStd5cKGgALrmu7qY0XIUsL3/view?usp=sharing)
+[Download Expense Buddy APK](https://drive.google.com/file/d/13ENolcp__FB8S9MIMSSg8IMKY5Y8_m5e/view?usp=sharing)
 
 ## Screenshots
 
