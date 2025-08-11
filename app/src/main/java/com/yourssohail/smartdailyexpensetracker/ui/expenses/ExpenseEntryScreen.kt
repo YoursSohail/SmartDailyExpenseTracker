@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 import com.yourssohail.smartdailyexpensetracker.ui.common.ProgressButton
@@ -348,9 +349,9 @@ private fun ExpenseEntryScreenContent(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val imageBitmap: ImageBitmap? = remember(uiState.selectedReceiptUri) {
-                            uiState.selectedReceiptUri?.let { uriString ->
+                            uiState.selectedReceiptUri.let { uriString ->
                                 try {
-                                    val uri = Uri.parse(uriString)
+                                    val uri = uriString.toUri()
                                     if (uriString.startsWith("content://")) {
                                         context.contentResolver.openInputStream(uri)
                                             ?.use { inputStream ->
