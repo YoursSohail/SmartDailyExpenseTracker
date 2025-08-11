@@ -1,8 +1,8 @@
 package com.yourssohail.smartdailyexpensetracker.di
 
 import com.yourssohail.smartdailyexpensetracker.data.local.dao.ExpenseDao
-import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.repository.ExpenseRepositoryImpl
+import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * repository instances are singletons.
  */
 @Module
-@InstallIn(SingletonComponent::class) // Often repositories are singletons
+@InstallIn(SingletonComponent::class)
 object RepositoryModule {
 
     /**

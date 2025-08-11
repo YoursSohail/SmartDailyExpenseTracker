@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-// import androidx.compose.material3.Button // No longer directly used by top-level screen logic if ProgressButton is self-contained
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -72,7 +71,6 @@ import com.yourssohail.smartdailyexpensetracker.utils.formatDate
 import java.io.File
 import java.io.FileInputStream
 import java.util.Calendar
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -422,7 +420,7 @@ private fun ExpenseEntryScreenContent(
                             OutlinedButton(onClick = onDismissDuplicateWarning) {
                                 Text("Cancel")
                             }
-                            androidx.compose.material3.Button(onClick = onForceSaveExpense) { // Kept explicit Button for "Save Anyway" as it's not the primary save
+                            androidx.compose.material3.Button(onClick = onForceSaveExpense) {
                                 Text("Save Anyway")
                             }
                         }
@@ -445,7 +443,7 @@ private fun ExpenseEntryScreenContent(
 @Preview(showBackground = true, name = "Expense Entry Add Mode")
 @Composable
 fun ExpenseEntryScreenPreview() {
-    MaterialTheme { // Assuming you have a Theme wrapper for previews
+    MaterialTheme {
         ExpenseEntryScreenContent(
             uiState = ExpenseEntryUiState(
                 title = "Lunch",
@@ -456,7 +454,6 @@ fun ExpenseEntryScreenPreview() {
                 totalSpentToday = "₹550.75",
                 isEditMode = false,
                 receiptFileName = "receipt_lunch.jpg",
-//                selectedReceiptUri = "content://path/to/receipt_lunch.jpg" // Example URI - causes issues in preview if not resolvable
             ),
             categories = CategoryType.entries.toList(),
             onTitleChange = {},

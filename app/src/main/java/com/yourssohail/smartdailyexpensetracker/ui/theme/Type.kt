@@ -6,10 +6,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Default Font Family (Can be replaced with custom fonts later)
-val AppFontFamily = FontFamily.Default // Or specify custom fonts e.g. FontFamily(Font(R.font.your_font_regular))
+val AppFontFamily = FontFamily.Default
 
-// Set of Material typography styles to start with
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = AppFontFamily,
@@ -55,7 +53,7 @@ val Typography = Typography(
     ),
     titleLarge = TextStyle(
         fontFamily = AppFontFamily,
-        fontWeight = FontWeight.Medium, // Material 3 uses Medium for titleLarge
+        fontWeight = FontWeight.Medium,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp

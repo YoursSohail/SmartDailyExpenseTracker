@@ -5,8 +5,8 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
 import com.yourssohail.smartdailyexpensetracker.domain.repository.ExpenseRepository
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.AddExpenseUseCase
 import com.yourssohail.smartdailyexpensetracker.domain.usecase.DetectDuplicateExpenseUseCase
@@ -31,7 +31,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Calendar
-import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -55,7 +54,7 @@ class ExpenseEntryViewModel @Inject constructor(
     private val validateExpenseUseCase: ValidateExpenseUseCase,
     private val detectDuplicateExpenseUseCase: DetectDuplicateExpenseUseCase,
     private val getExpenseByIdUseCase: GetExpenseByIdUseCase,
-    private val expenseRepository: ExpenseRepository, // For total spent today
+    private val expenseRepository: ExpenseRepository,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -78,7 +77,7 @@ class ExpenseEntryViewModel @Inject constructor(
 
     init {
         val expenseId = savedStateHandle.get<Long>(EXPENSE_ID_ARG)
-        if (expenseId != null && expenseId != -1L) { // -1L is the default if not passed
+        if (expenseId != null && expenseId != -1L) {
             _uiState.update { it.copy(isLoading = true, isEditMode = true, currentExpenseId = expenseId) }
             viewModelScope.launch {
                 val expense = getExpenseByIdUseCase(expenseId).firstOrNull()
@@ -91,7 +90,7 @@ class ExpenseEntryViewModel @Inject constructor(
                             selectedCategory = try { CategoryType.valueOf(expense.category) } catch (e: IllegalArgumentException) { null },
                             notes = expense.notes ?: "",
                             date = expense.date,
-                            selectedReceiptUri = expense.receiptImagePath, // Initially, selected is the existing one
+                            selectedReceiptUri = expense.receiptImagePath,
                             receiptFileName = expense.receiptImagePath?.let { File(it).name },
                             existingReceiptPath = expense.receiptImagePath
                         )
@@ -100,11 +99,11 @@ class ExpenseEntryViewModel @Inject constructor(
                 } else {
                     _uiState.update { it.copy(isLoading = false) }
                     _eventFlow.emit(ExpenseEntryEvent.ShowToast("Error: Could not load expense to edit."))
-                    updateSaveButtonStatus() // Ensure save button state is correct
+                    updateSaveButtonStatus()
                 }
             }
         } else {
-            updateSaveButtonStatus() // Initial state for new expense
+            updateSaveButtonStatus()
         }
         observeTotalSpentToday()
     }

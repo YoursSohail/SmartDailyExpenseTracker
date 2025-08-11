@@ -36,7 +36,7 @@ internal fun ThemeSettingOption(
     ) {
         RadioButton(
             selected = selected,
-            onClick = null // onClick is handled by the Row's selectable modifier
+            onClick = null
         )
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
     }

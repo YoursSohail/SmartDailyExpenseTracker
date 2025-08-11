@@ -3,8 +3,8 @@ package com.yourssohail.smartdailyexpensetracker.ui.report
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
 
 internal object PdfConstants {
     const val A4_PAGE_HEIGHT = 842

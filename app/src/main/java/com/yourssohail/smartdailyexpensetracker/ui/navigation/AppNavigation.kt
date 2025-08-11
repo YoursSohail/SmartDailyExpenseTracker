@@ -27,7 +27,6 @@ import com.yourssohail.smartdailyexpensetracker.ui.expenses.ExpenseEntryScreen
 import com.yourssohail.smartdailyexpensetracker.ui.report.ExpenseReportScreen
 import com.yourssohail.smartdailyexpensetracker.ui.settings.SettingsScreen
 
-// Using Screen and bottomNavItems from AppDestinations.kt
 
 const val EXPENSE_ID_ARG = "expenseId"
 

@@ -3,7 +3,7 @@ package com.yourssohail.smartdailyexpensetracker.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.yourssohail.smartdailyexpensetracker.data.preferences.userPreferencesDataStore // Import the extension property
+import com.yourssohail.smartdailyexpensetracker.data.preferences.userPreferencesDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

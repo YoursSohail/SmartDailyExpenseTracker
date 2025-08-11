@@ -1,6 +1,6 @@
 package com.yourssohail.smartdailyexpensetracker.ui.expenselist
 
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
 
 /**

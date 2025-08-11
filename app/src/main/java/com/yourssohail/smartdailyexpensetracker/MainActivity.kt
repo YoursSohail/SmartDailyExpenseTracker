@@ -1,16 +1,14 @@
 package com.yourssohail.smartdailyexpensetracker
 
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-// import androidx.hilt.navigation.compose.hiltViewModel // Keep if AppNavigation uses it, otherwise can be removed if not used elsewhere in this file
 import com.yourssohail.smartdailyexpensetracker.data.model.ThemeSetting
-// Corrected import to use ThemePreferencesRepository
 import com.yourssohail.smartdailyexpensetracker.data.preferences.ThemePreferencesRepository
 import com.yourssohail.smartdailyexpensetracker.ui.navigation.AppNavigation
 import com.yourssohail.smartdailyexpensetracker.ui.theme.SmartDailyExpenseTrackerTheme
@@ -21,7 +19,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var themePreferencesRepository: ThemePreferencesRepository // Corrected repository
+    lateinit var themePreferencesRepository: ThemePreferencesRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

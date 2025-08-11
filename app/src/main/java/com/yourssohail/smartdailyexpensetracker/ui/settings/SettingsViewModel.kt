@@ -34,8 +34,8 @@ class SettingsViewModel @Inject constructor(
     val currentThemeSetting: StateFlow<ThemeSetting> =
         themePreferencesRepository.themeSetting.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000), // Keep subscribed for 5s after last collector
-            initialValue = ThemeSetting.SYSTEM_DEFAULT // Sensible default
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ThemeSetting.SYSTEM_DEFAULT
         )
 
     /**

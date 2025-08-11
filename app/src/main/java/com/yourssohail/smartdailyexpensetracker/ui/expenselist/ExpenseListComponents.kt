@@ -70,8 +70,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
 import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
 import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
 import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
@@ -81,7 +81,6 @@ import com.yourssohail.smartdailyexpensetracker.utils.DatePatterns
 import com.yourssohail.smartdailyexpensetracker.utils.formatDate
 import java.io.File
 import java.util.Calendar
-import java.util.Date
 import java.util.EnumMap
 import java.util.Locale
 

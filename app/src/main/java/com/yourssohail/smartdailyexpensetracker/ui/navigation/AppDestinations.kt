@@ -11,7 +11,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
     object ExpenseList :
         Screen("expense_list_screen", "Expenses", Icons.AutoMirrored.Filled.ListAlt)
 
-    object ExpenseEntry : Screen("expense_entry", "Add Expense", null) // No icon for bottom bar
+    object ExpenseEntry : Screen("expense_entry", "Add Expense", null)
     object ExpenseReport : Screen("expense_report_screen", "Report", Icons.Default.Assessment)
     object Settings : Screen("settings_screen", "Settings", Icons.Default.Settings)
 }

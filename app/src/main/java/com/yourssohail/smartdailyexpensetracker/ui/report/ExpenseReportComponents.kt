@@ -22,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -126,7 +125,6 @@ fun DailyExpenseChartCard(
 @Composable
 fun ExportOptionsBottomSheet(
     sheetState: SheetState,
-    // scope: CoroutineScope, // Removed
     onDismiss: () -> Unit,
     onExportCsvClicked: () -> Unit,
     onExportPdfClicked: () -> Unit
@@ -159,7 +157,6 @@ fun ExportOptionsBottomSheet(
 @Composable
 fun ShareReportOptionsBottomSheet(
     sheetState: SheetState,
-    // scope: CoroutineScope, // Removed
     onDismiss: () -> Unit,
     onSharePdfRequested: () -> Unit,
     onShareCsvRequested: () -> Unit,
@@ -188,7 +185,7 @@ fun ShareReportOptionsBottomSheet(
                         Icons.AutoMirrored.Outlined.TextSnippet,
                         "Share as Text"
                     )
-                }, // Updated Icon
+                },
                 modifier = Modifier.clickable { onShareTextRequested() }
             )
         }

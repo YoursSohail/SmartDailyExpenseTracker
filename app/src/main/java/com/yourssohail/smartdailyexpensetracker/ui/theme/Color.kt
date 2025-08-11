@@ -2,7 +2,6 @@ package com.yourssohail.smartdailyexpensetracker.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// New Professional Dark Blue Theme
 
 // Light Theme Colors
 val md_theme_light_primary = Color(0xFF3949AB) // Dark Blue

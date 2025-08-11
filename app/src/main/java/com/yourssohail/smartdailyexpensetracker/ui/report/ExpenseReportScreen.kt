@@ -2,7 +2,6 @@ package com.yourssohail.smartdailyexpensetracker.ui.report
 
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,23 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.TextSnippet // Updated Icon
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.PictureAsPdf
-import androidx.compose.material.icons.outlined.TableView
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -41,7 +32,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,15 +41,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // For Preview, Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
 import com.yourssohail.smartdailyexpensetracker.ui.common.EmptyStateView
 import com.yourssohail.smartdailyexpensetracker.ui.common.FullScreenLoadingIndicator
 import com.yourssohail.smartdailyexpensetracker.ui.common.ScreenErrorMessage
 import com.yourssohail.smartdailyexpensetracker.ui.common.SectionTitle
 import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
 import ir.ehsannarmani.compose_charts.models.Bars
-import kotlinx.coroutines.CoroutineScope
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -315,16 +304,16 @@ fun ExpenseReportScreenPreview_Populated() {
     val sampleCategoryTotals = listOf(
         CategoryTotal(CategoryType.FOOD, 300.0, 60f),
         CategoryTotal(CategoryType.TRAVEL, 170.0, 34f),
-        CategoryTotal(CategoryType.STAFF, 30.0, 6f) // Assuming OTHER is valid
+        CategoryTotal(CategoryType.STAFF, 30.0, 6f)
     )
-    val sampleExpenses = emptyList<Expense>() // Corrected type
+    val sampleExpenses = emptyList<Expense>()
 
     MaterialTheme {
         ExpenseReportScreenContent(
             uiState = ExpenseReportUiState(
                 isLoading = false,
                 errorMessage = null,
-                expensesOverLast7Days = sampleExpenses, // Use corrected list
+                expensesOverLast7Days = sampleExpenses,
                 dailyTotals = sampleDailyTotals,
                 categoryTotals = sampleCategoryTotals,
                 totalForAllCategories = 500.0

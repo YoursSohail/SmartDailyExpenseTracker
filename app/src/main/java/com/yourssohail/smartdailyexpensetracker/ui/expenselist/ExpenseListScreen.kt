@@ -1,6 +1,5 @@
 package com.yourssohail.smartdailyexpensetracker.ui.expenselist
 
-import android.app.DatePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -37,14 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.yourssohail.smartdailyexpensetracker.domain.model.Expense // Updated import
 import com.yourssohail.smartdailyexpensetracker.data.model.CategoryType
+import com.yourssohail.smartdailyexpensetracker.domain.model.Expense
 import com.yourssohail.smartdailyexpensetracker.utils.CURRENCY_FORMATTER_INR
 import com.yourssohail.smartdailyexpensetracker.utils.DatePatterns
 import com.yourssohail.smartdailyexpensetracker.utils.formatDate
-import java.util.Calendar // Needed for rememberDatePickerDialog if defined here
-import java.util.Date
-import java.util.Locale
+import java.util.Calendar
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

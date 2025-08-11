@@ -9,12 +9,10 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-// Using the new Professional Dark Blue Theme colors
 private val LightAppColorScheme = lightColorScheme(
     primary = md_theme_light_primary,
     onPrimary = md_theme_light_onPrimary,
@@ -70,10 +68,7 @@ private val DarkAppColorScheme = darkColorScheme(
 @Composable
 fun SmartDailyExpenseTrackerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    // Set to false to always use your custom theme.
-    // Consider if you want to offer dynamic theming or stick to your brand colors.
-    dynamicColor: Boolean = false, // Changed to false to enforce the new custom theme
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -81,6 +76,7 @@ fun SmartDailyExpenseTrackerTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+
         darkTheme -> DarkAppColorScheme
         else -> LightAppColorScheme
     }
@@ -88,21 +84,18 @@ fun SmartDailyExpenseTrackerTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as? android.app.Activity)?.window
-            // Use a color that fits the new theme, e.g., surface or background
-            window?.statusBarColor = colorScheme.surface.toArgb()
-            WindowCompat.getInsetsController(window!!, view).isAppearanceLightStatusBars = !darkTheme
-            
-            // Optional: Customize navigation bar color as well
-            // window.navigationBarColor = colorScheme.surface.toArgb() // Or another color like surfaceVariant
-            // WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
+            val activity = view.context as? android.app.Activity
+            activity?.window?.let { window ->
+                WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars =
+                    !darkTheme
+            }
         }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // This comes from Type.kt
-        shapes = Shapes, // Assuming Shapes.kt exists and is set up for M3
+        typography = Typography,
+        shapes = Shapes,
         content = content
     )
 }
